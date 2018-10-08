@@ -11,8 +11,8 @@ ip_start="${ip_start:-192.168.0.2}"
 subnet="${subnet:-16}"
 ip_range="$ip_start/$subnet"
 
-# Do a glide install if vendor directory does not exist
-[[ -d vendor ]] || glide install
+# Install deps
+"$DIR/install_deps.bash"
 
 # Run
 batch-ethkey -dir "$BUILD_DIR/nodes" -network "$ip_start" -n "$n" > "$PEERS_DIR/peers.json"
