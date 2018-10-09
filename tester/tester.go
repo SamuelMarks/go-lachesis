@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -92,8 +93,14 @@ func transact(target peers.Peer, nodeId int, txId UniqueID, proxyAddress string)
 	// rpcClient.Call("createPerson", "Alex", 33, "Germany")
 	// generates body: {"method":"createPerson","params":["Alex",33,"Germany"],"id":0,"jsonrpc":"2.0"}
 
+	l_addr := strings.Split(target.NetAddr, ":")
+	l_port, err :=  strconv.Atoi(l_addr[1]);
+	if err != nil {
+		l_port = 9000
+	}
+
 	tcpAddr, err := net.ResolveTCPAddr("tcp4",
-		fmt.Sprintf("%s:%d", strings.Split(target.NetAddr, ":")[0], 9000))
+		fmt.Sprintf("%s:%d", l_addr[0], l_port))
 	if err != nil {
 		return "", err
 	}
