@@ -218,9 +218,11 @@ func (b *Block) Hex() string {
 }
 
 func (b *Block) Sign(privKey *ecdsa.PrivateKey) (bs BlockSignature, err error) {
-	// b.Body.StateHash = nil
+	saveStateHash := b.Body.StateHash
+	b.Body.StateHash = nil
 
 	signBytes, err := b.Body.Hash()
+	b.Body.StateHash = saveStateHash
 	if err != nil {
 		return bs, err
 	}
@@ -243,9 +245,11 @@ func (b *Block) SetSignature(bs BlockSignature) error {
 }
 
 func (b *Block) Verify(sig BlockSignature) (bool, error) {
-	// b.Body.StateHash = nil
+	saveStateHash := b.Body.StateHash
+	b.Body.StateHash = nil
 
 	signBytes, err := b.Body.Hash()
+	b.Body.StateHash = saveStateHash
 	if err != nil {
 		return false, err
 	}
