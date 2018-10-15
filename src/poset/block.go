@@ -218,6 +218,10 @@ func (b *Block) Hex() string {
 }
 
 func (b *Block) Sign(privKey *ecdsa.PrivateKey) (bs BlockSignature, err error) {
+	// TODO: Currently StateHash value is different on sender and receiver
+	// so we need to review StateHash placement inside block body.
+	// Setting StateHash to nil before Hash calculation is a temporary fix for
+	// block signature verification bug https://github.com/andrecronje/lachesis/issues/42
 	saveStateHash := b.Body.StateHash
 	b.Body.StateHash = nil
 
@@ -245,6 +249,10 @@ func (b *Block) SetSignature(bs BlockSignature) error {
 }
 
 func (b *Block) Verify(sig BlockSignature) (bool, error) {
+	// TODO: Currently StateHash value is different on sender and receiver
+	// so we need to review StateHash placement inside block body.
+	// Setting StateHash to nil before Hash calculation is a temporary fix for
+	// block signature verification bug https://github.com/andrecronje/lachesis/issues/42
 	saveStateHash := b.Body.StateHash
 	b.Body.StateHash = nil
 
