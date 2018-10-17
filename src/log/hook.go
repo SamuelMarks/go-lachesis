@@ -4,6 +4,7 @@
 package lachesis_log
 
 import (
+	"fmt"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -20,13 +21,24 @@ type Hook struct {
 
 // NewLocal installs a test hook for a given local logger.
 func NewLocal(logger *logrus.Logger) {
-	logger.Hooks.Add(new(Hook))
+	h := new(Hook)
+	h.startTime = time.Now()
+	logger.Hooks.Add(h)
 }
 
 func (t *Hook) Fire(e *logrus.Entry) error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if e.Time.Sub(t.startTime).Seconds() > 20 { // 20 seconds in nanoseconds
+		// NOTE: we can not use logrus logger here as it seems is not re-entrant
+		// and we are inside log entry processing here
+		fmt.Println(
+			"LOGSTAT debug:", t.stat[logrus.DebugLevel],
+			" info:", t.stat[logrus.InfoLevel],
+			" warn:", t.stat[logrus.WarnLevel],
+			" error:", t.stat[logrus.ErrorLevel],
+			" fatal:", t.stat[logrus.FatalLevel],
+			" panic:", t.stat[logrus.PanicLevel] )
 		t.stat = [6]int64{} // 6 is current value of len(logrus.AllLevels)
 		// must be adjusted if changed in future in logrus
 		t.startTime = e.Time
