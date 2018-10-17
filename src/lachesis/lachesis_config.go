@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/andrecronje/lachesis/src/log"
 	"github.com/andrecronje/lachesis/src/node"
 	"github.com/andrecronje/lachesis/src/proxy"
 	aproxy "github.com/andrecronje/lachesis/src/proxy/app"
