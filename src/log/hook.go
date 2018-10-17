@@ -32,7 +32,11 @@ func (t *Hook) Fire(e *logrus.Entry) error {
 	if e.Time.Sub(t.startTime).Seconds() > 20 { // 20 seconds in nanoseconds
 		// NOTE: we can not use logrus logger here as it seems is not re-entrant
 		// and we are inside log entry processing here
-		fmt.Printf("LOGSTAT({ \"debug\": %d, \"info\": %d, \"warn\": %d, \"error\": %d, \"fatal\": %d, \"panic\": %d})\n",
+
+		// logrus message format:
+		// time="<stamp>" level="<level>" msg="LOGSTAT" debug=0  info=0 warn=5 error=0 fatal=0 panic=0
+		fmt.Printf("time=\"" +  e.Time.Format(time.RFC3339) +
+			"\" level=debug msg=\"LOGSTAT\" debug=%d info=%d warn=%d error=%d fatal=%d panic=%d\n",
 			t.stat[logrus.DebugLevel],
 			t.stat[logrus.InfoLevel],
 			t.stat[logrus.WarnLevel],
