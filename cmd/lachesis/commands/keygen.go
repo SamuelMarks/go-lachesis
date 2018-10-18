@@ -13,6 +13,7 @@ import (
 var (
 	privKeyFile           string
 	pubKeyFile            string
+	config = NewDefaultCLIConfig()
 	defaultPrivateKeyFile = fmt.Sprintf("%s/priv_key.pem", config.Lachesis.DataDir)
 	defaultPublicKeyFile  = fmt.Sprintf("%s/key.pub", config.Lachesis.DataDir)
 )

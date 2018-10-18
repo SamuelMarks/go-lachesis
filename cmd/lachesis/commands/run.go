@@ -9,6 +9,7 @@ import (
 	"github.com/andrecronje/lachesis/tester"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/urfave/cli"
 )
 
@@ -23,7 +24,7 @@ func NewRunCmd() *cobra.Command {
 	return cmd
 }
 
-func runSingleLachesis(cmd *cobra.Command, args []string) error {
+func runSingleLachesis(config *CLIConfig) error {
 	config.Lachesis.Logger.Level = lachesis.LogLevel(config.Lachesis.LogLevel)
 	config.Lachesis.NodeConfig.Logger = config.Lachesis.Logger
 
