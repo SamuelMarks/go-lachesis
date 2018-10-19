@@ -31,8 +31,40 @@ func runLachesis(cmd *cobra.Command, args []string) error {
 		Inapp:      false,
 	}
 	copier.Copy(&config2.Lachesis, &config.Lachesis)
+	config2.Lachesis.BindAddr = "127.0.0.2:1200"
+	config2.ProxyAddr = "127.0.0.2:9000"
 
 	go runSingleLachesis(config2)
+
+
+	config2 := &CLIConfig{
+		Lachesis:   lachesis.LachesisConfig{},
+		ProxyAddr:  "127.0.0.1:1338",
+		ClientAddr: "127.0.0.1:1339",
+		Inapp:      false,
+	}
+	copier.Copy(&config2.Lachesis, &config.Lachesis)
+	config2.Lachesis.BindAddr = "127.0.0.2:1200"
+	config2.ProxyAddr = "127.0.0.2:9000"
+
+	go runSingleLachesis(config2)
+
+
+
+	config3 := &CLIConfig{
+		Lachesis:   lachesis.LachesisConfig{},
+		ProxyAddr:  "127.0.0.1:1338",
+		ClientAddr: "127.0.0.1:1339",
+		Inapp:      false,
+	}
+	copier.Copy(&config3.Lachesis, &config.Lachesis)
+	config3.Lachesis.BindAddr = "127.0.0.3:1200"
+	config3.ProxyAddr = "127.0.0.3:9000"
+
+	go runSingleLachesis(config3)
+
+
 	
+
 	return runSingleLachesis(config)
 }
