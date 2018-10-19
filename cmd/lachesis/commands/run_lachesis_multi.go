@@ -5,66 +5,38 @@
 package commands
 
 import (
-	"github.com/andrecronje/lachesis/src/lachesis"
-	"github.com/jinzhu/copier"
+	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 func runLachesis(cmd *cobra.Command, args []string) error {
 
-	config := NewDefaultCLIConfig()
+	var configs [3]*CLIConfig
 
-	if err := bindFlagsLoadViper(cmd, config); err != nil {
-		return err
+	for i := 0; i < 3; i++ {
+
+		configs[i] = NewDefaultCLIConfig()
+
+		if err := bindFlagsLoadViper(cmd, configs[i]); err != nil {
+			return err
+		}
+
+		err := viper.Unmarshal(configs[i])
+		if err != nil {
+			return err
+		}
+
+		configs[i].Lachesis.BindAddr = fmt.Sprintf("127.0.0.%d:12000", i+1)
+		configs[i].Lachesis.ServiceAddr = fmt.Sprintf("127.0.0.%d:8000", i+1)
+		configs[i].ProxyAddr = fmt.Sprintf("127.0.0.%d:9000",i+1)
+		configs[i].Lachesis.DataDir += fmt.Sprintf("/%d", i)
+
+		if i > 0 {
+			go runSingleLachesis(configs[i])
+		}
+
 	}
 
-	err := viper.Unmarshal(config)
-	if err != nil {
-		return err
-	}
-
-	config2 := &CLIConfig{
-		Lachesis:   lachesis.LachesisConfig{},
-		ProxyAddr:  "127.0.0.1:1338",
-		ClientAddr: "127.0.0.1:1339",
-		Inapp:      false,
-	}
-	copier.Copy(&config2.Lachesis, &config.Lachesis)
-	config2.Lachesis.BindAddr = "127.0.0.2:1200"
-	config2.ProxyAddr = "127.0.0.2:9000"
-
-	go runSingleLachesis(config2)
-
-
-	config2 := &CLIConfig{
-		Lachesis:   lachesis.LachesisConfig{},
-		ProxyAddr:  "127.0.0.1:1338",
-		ClientAddr: "127.0.0.1:1339",
-		Inapp:      false,
-	}
-	copier.Copy(&config2.Lachesis, &config.Lachesis)
-	config2.Lachesis.BindAddr = "127.0.0.2:1200"
-	config2.ProxyAddr = "127.0.0.2:9000"
-
-	go runSingleLachesis(config2)
-
-
-
-	config3 := &CLIConfig{
-		Lachesis:   lachesis.LachesisConfig{},
-		ProxyAddr:  "127.0.0.1:1338",
-		ClientAddr: "127.0.0.1:1339",
-		Inapp:      false,
-	}
-	copier.Copy(&config3.Lachesis, &config.Lachesis)
-	config3.Lachesis.BindAddr = "127.0.0.3:1200"
-	config3.ProxyAddr = "127.0.0.3:9000"
-
-	go runSingleLachesis(config3)
-
-
-	
-
-	return runSingleLachesis(config)
+	return runSingleLachesis(configs[0])
 }
