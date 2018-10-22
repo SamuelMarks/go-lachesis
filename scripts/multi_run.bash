@@ -15,8 +15,8 @@ declare -r ip_range="$ip_start/$subnet"
 
 # Create loopback aliases and cp json.peers per node datadir
 declare -i node_num=0
-for ip in $(jq -rc '.[].NetAddr' "$PEERS_DIR/peers.json"); do
-    cp "$PEERS_DIR/peers.json" "$BUILD_DIR/lachesis_data_dir/$node_num/"
+for ip in $(jq -rc '.[].NetAddr' "$PEERS_DIR/lachesis_data_dir/peers.json"); do
+    cp "$PEERS_DIR/lachesis_data_dir/peers.json" "$BUILD_DIR/lachesis_data_dir/$node_num/"
 
     ip="${ip%:*}";
     echo "$ip"
