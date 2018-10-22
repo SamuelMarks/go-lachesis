@@ -67,7 +67,6 @@ func (t *Hook) Fire(e *logrus.Entry) error {
 			fmt.Printf("FatalLevel logging threshold reached, exiting.\n");
 			os.Exit(128);
 		}
-		fmt.Printf("**ErrorLevel.threshold=%d  count:%d\n", t.logshold[logrus.ErrorLevel], t.stat[logrus.ErrorLevel])
 		if t.logshold[logrus.ErrorLevel] >= 0 && t.stat[logrus.ErrorLevel] > t.logshold[logrus.ErrorLevel] {
 			fmt.Printf("ErrorLevel logging threshold reached, exiting.\n");
 			os.Exit(129);

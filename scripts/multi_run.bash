@@ -45,4 +45,4 @@ for ip in $(jq -rc '.[].NetAddr' "$PEERS_DIR/lachesis_data_dir/peers.json"); do
 done
 
 # Run multi lachesis
-GOMAXPROCS=$(("$logicalCpuCount" - 1)) ./lachesis_linux run --datadir "$BUILD_DIR/lachesis_data_dir" --store --listen="$node_addr":12000 --log=warn --heartbeat=4s -p "$node_addr":9000 --test
+GOMAXPROCS=$(("$logicalCpuCount" - 1)) ./lachesis_linux run --datadir "$BUILD_DIR/lachesis_data_dir" --store --listen="$node_addr":12000 --log=warn --heartbeat=5s -p "$node_addr":9000 --test --test_n=10000
