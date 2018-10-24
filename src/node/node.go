@@ -162,13 +162,6 @@ func (n *Node) doBackgroundWork() {
 					n.controlTimer.resetCh <- struct{}{}
 				}
 			})
-		case t := <-n.submitCh:
-			n.logger.Debug("Adding Transactions to Transaction Pool")
-			// n.mqtt.FireEvent(t, "/mq/lachesis/tx")
-			n.addTransaction(t)
-			if !n.controlTimer.set {
-				n.controlTimer.resetCh <- struct{}{}
-			}
 		case block := <-n.commitCh:
 			n.logger.WithFields(logrus.Fields{
 				"index":          block.Index(),
