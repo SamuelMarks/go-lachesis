@@ -41,7 +41,10 @@ func PingNodesN(participants []*peers.Peer, p peers.PubKeyPeers, n uint64, servi
 		}*/
 	}
 
-	fmt.Println("Pinging stopped")
+	for _, proxy := range proxies {
+		proxy.Close()
+	}
+	fmt.Println("Pinging stopped after ", n, " iterations")
 }
 
 func transact(proxy *lachesis.WebsocketLachesisProxy) (string, error) {
@@ -58,6 +61,5 @@ func transact(proxy *lachesis.WebsocketLachesisProxy) (string, error) {
 	}
 	// fmt.Println("Submitted tx, ack=", ack)  # `ack` is now `_`
 
-	proxy.Close()
 	return "", nil
 }
