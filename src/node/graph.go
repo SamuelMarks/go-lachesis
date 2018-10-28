@@ -45,7 +45,7 @@ func (g *Graph) GetParticipantEvents() map[string]map[string]poset.Event {
 			panic(err)
 		}
 
-		evs, err := store.ParticipantEvents(p.PubKeyHex, root.SelfParent.Index)
+		evs, err := store.ParticipantEvents(p.PubKeyHex, int(root.SelfParent.Index))
 
 		if err != nil {
 			panic(err)
@@ -55,11 +55,11 @@ func (g *Graph) GetParticipantEvents() map[string]map[string]poset.Event {
 
 		selfParent := fmt.Sprintf("Root%d", p.ID)
 
-		flagTable := make(map[string]int)
+		flagTable := make(map[string]int64)
 		flagTable[selfParent] = 1
 
 		// Create and save the first Event
-		initialEvent := poset.NewEvent([][]byte{}, []poset.BlockSignature{},
+		initialEvent := poset.NewEvent([][]byte{}, []*poset.BlockSignature{},
 			[]string{}, []byte{}, 0, flagTable)
 
 		res[p.PubKeyHex][root.SelfParent.Hash] = initialEvent

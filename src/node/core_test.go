@@ -40,7 +40,7 @@ func initCores(n int, t *testing.T) ([]Core, map[int]*ecdsa.PrivateKey, map[stri
 
 		selfParent := fmt.Sprintf("Root%d", peer.ID)
 
-		flagTable := make(map[string]int)
+		flagTable := make(map[string]int64)
 		flagTable[selfParent] = 1
 
 		// Create and save the first Event
@@ -96,7 +96,7 @@ func initPoset(t *testing.T, cores []Core, keys map[int]*ecdsa.PrivateKey,
 		t.Fatalf("failed to get parent: %s", err)
 	}
 
-	event1ft, _ := event1.GetFlagTable()
+	event1ft, _ := event1.GetUnmarshalledFlagTable()
 	event01ft, _ := event0.MargeFlagTable(event1ft)
 
 	event01 := poset.NewEvent([][]byte{}, nil,
@@ -277,7 +277,7 @@ func TestSync(t *testing.T) {
 	if core0Head.OtherParent() != index["e1"] {
 		t.Fatalf("core 0 head other-parent should be e1")
 	}
-	if len(core0Head.FlagTable) == 0 {
+	if len(core0Head.flagTable) == 0 {
 		t.Fatal("flag table is null")
 	}
 	index["e01"] = core0Head.Hex()
@@ -959,7 +959,7 @@ func TestCoreFastForward(t *testing.T) {
 			t.Fatalf("Cores[0].poset.LastBlockIndex should be 0, not %d", lbi)
 		}
 
-		sBlock, err := cores[0].poset.Store.GetBlock(block.Index())
+		sBlock, err := cores[0].poset.Store.GetBlock(int(block.Index()))
 		if err != nil {
 			t.Fatalf("Error retrieving latest Block from reset poset: %v", err)
 		}

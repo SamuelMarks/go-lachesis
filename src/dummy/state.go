@@ -86,7 +86,7 @@ func (s *State) commit(block poset.Block) error {
 		s.logger.Info(string(tx))
 		hash = crypto.SimpleHashFromTwoHashes(hash, crypto.SHA256(tx))
 	}
-	s.snapshots[block.Index()] = hash
+	s.snapshots[int(block.Index())] = hash
 	s.stateHash = hash
 	return nil
 }

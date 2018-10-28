@@ -215,12 +215,12 @@ func (s *BadgerStore) KnownEvents() map[int]int {
 				root, err := s.GetRoot(p)
 				if err != nil {
 					last = root.SelfParent.Hash
-					index = root.SelfParent.Index
+					index = int(root.SelfParent.Index)
 				}
 			} else {
 				lastEvent, err := s.GetEvent(last)
 				if err == nil {
-					index = lastEvent.Index()
+					index = int(lastEvent.Index())
 				}
 			}
 
@@ -387,12 +387,12 @@ func (s *BadgerStore) dbSetEvents(events []Event) error {
 
 		if existent {
 			//insert [topo_index] => [event hash]
-			topoKey := topologicalEventKey(event.topologicalIndex)
+			topoKey := topologicalEventKey(int(event.TopologicalIndex))
 			if err := tx.Set(topoKey, []byte(eventHex)); err != nil {
 				return err
 			}
 			//insert [participant_index] => [event hash]
-			peKey := participantEventKey(event.Creator(), event.Index())
+			peKey := participantEventKey(event.Creator(), int(event.Index()))
 			if err := tx.Set(peKey, []byte(eventHex)); err != nil {
 				return err
 			}
@@ -638,7 +638,7 @@ func (s *BadgerStore) dbSetBlock(block Block) error {
 	tx := s.db.NewTransaction(true)
 	defer tx.Discard()
 
-	key := blockKey(block.Index())
+	key := blockKey(int(block.Index()))
 	val, err := block.Marshal()
 	if err != nil {
 		return err
@@ -680,7 +680,7 @@ func (s *BadgerStore) dbSetFrame(frame Frame) error {
 	tx := s.db.NewTransaction(true)
 	defer tx.Discard()
 
-	key := frameKey(frame.Round)
+	key := frameKey(int(frame.Round))
 	val, err := frame.Marshal()
 	if err != nil {
 		return err

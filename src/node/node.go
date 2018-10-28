@@ -323,7 +323,7 @@ func (n *Node) processFastForwardRequest(rpc net.RPC, cmd *net.FastForwardReques
 	resp.Frame = frame
 
 	// Get snapshot
-	snapshot, err := n.proxy.GetSnapshot(block.Index())
+	snapshot, err := n.proxy.GetSnapshot(int(block.Index()))
 	if err != nil {
 		n.logger.WithField("error", err).Error("n.proxy.GetSnapshot(block.Index())")
 		respErr = err

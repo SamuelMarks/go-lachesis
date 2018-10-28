@@ -32,3 +32,5 @@ import:
   version: ^1.2.2
   subpackages:
   - assert
+- package: github.com/golang/protobuf
+  version: ^1.2.0

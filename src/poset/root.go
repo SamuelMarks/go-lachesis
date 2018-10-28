@@ -1,10 +1,9 @@
 package poset
 
 import (
-	"bytes"
 	"fmt"
 
-	"github.com/ugorji/go/codec"
+	"github.com/golang/protobuf/proto"
 )
 
 /*
@@ -62,19 +61,12 @@ ex 2:
 
 //RootEvent contains enough information about an Event and its direct descendant
 //to allow inserting Events on top of it.
-type RootEvent struct {
-	Hash             string
-	CreatorID        int
-	Index            int
-	LamportTimestamp int
-	Round            int
-}
 
 //NewBaseRootEvent creates a RootEvent corresponding to the the very beginning
 //of a Poset.
-func NewBaseRootEvent(creatorID int) RootEvent {
+func NewBaseRootEvent(creatorID int64) *RootEvent {
 	hash := fmt.Sprintf("Root%d", creatorID)
-	res := RootEvent{
+	res := &RootEvent{
 		Hash:             hash,
 		CreatorID:        creatorID,
 		Index:            -1,
@@ -90,48 +82,30 @@ func NewBaseRootEvent(creatorID int) RootEvent {
 //in future Events. NextRound corresponds to a proposed value for the child's
 //Round; it is only used if the child's OtherParent is empty or NOT in the
 //Root's Others.
-type Root struct {
-	NextRound  int
-	SelfParent RootEvent
-	Others     map[string]RootEvent
-}
 
 //NewBaseRoot initializes a Root object for a fresh Poset.
-func NewBaseRoot(creatorID int) Root {
+func NewBaseRoot(creatorID int64) Root {
 	res := Root{
 		NextRound:  0,
 		SelfParent: NewBaseRootEvent(creatorID),
-		Others:     map[string]RootEvent{},
+		Others:     map[string]*RootEvent{},
 	}
 	return res
 }
 
-//The JSON encoding of a Root must be DETERMINISTIC because it is itself
-//included in the JSON encoding of a Frame. The difficulty is that Roots contain
-//go maps for which one should not expect a de facto order of entries; we cannot
-//use the builtin JSON codec within overriding something. Instead, we are using
-//a third party library (ugorji/codec) that enables deterministic encoding of
-//golang maps.
 func (root *Root) Marshal() ([]byte, error) {
+	var b proto.Buffer
+	b.SetDeterministic(true)
 
-	b := new(bytes.Buffer)
-	jh := new(codec.JsonHandle)
-	jh.Canonical = true
-	enc := codec.NewEncoder(b, jh)
-
-	if err := enc.Encode(root); err != nil {
+	if err := b.Marshal(root); err != nil {
 		return nil, err
 	}
-
 	return b.Bytes(), nil
 }
 
 func (root *Root) Unmarshal(data []byte) error {
+	b := proto.NewBuffer(data)
+	b.SetDeterministic(true)
 
-	b := bytes.NewBuffer(data)
-	jh := new(codec.JsonHandle)
-	jh.Canonical = true
-	dec := codec.NewDecoder(b, jh)
-
-	return dec.Decode(root)
+	return b.Unmarshal(root)
 }

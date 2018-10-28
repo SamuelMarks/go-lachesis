@@ -163,12 +163,12 @@ func TestDBEventMethods(t *testing.T) {
 		for k := 0; k < testSize; k++ {
 			event := NewEvent(
 				[][]byte{[]byte(fmt.Sprintf("%s_%d", p.hex[:5], k))},
-				[]BlockSignature{{Validator: []byte("validator"), Index: 0, Signature: "r|s"}},
+				[]*BlockSignature{&BlockSignature{Validator: []byte("validator"), Index: 0, Signature: "r|s"}},
 				[]string{"", ""},
 				p.pubKey,
-				k, nil)
+				int64(k), nil)
 			event.Sign(p.privKey)
-			event.topologicalIndex = topologicalIndex
+			event.TopologicalIndex = int64(topologicalIndex)
 			topologicalIndex++
 			topologicalEvents = append(topologicalEvents, event)
 
@@ -263,7 +263,7 @@ func TestDBRoundMethods(t *testing.T) {
 	events := make(map[string]Event)
 	for _, p := range participants {
 		event := NewEvent([][]byte{},
-			[]BlockSignature{},
+			[]*BlockSignature{},
 			[]string{"", ""},
 			p.pubKey,
 			0, nil)
@@ -337,7 +337,7 @@ func TestDBBlockMethods(t *testing.T) {
 	}
 	frameHash := []byte("this is the frame hash")
 
-	block := NewBlock(index, roundReceived, frameHash, transactions)
+	block := NewBlock(int64(index), int64(roundReceived), frameHash, transactions)
 
 	sig1, err := block.Sign(participants[0].privKey)
 	if err != nil {
@@ -396,20 +396,20 @@ func TestDBFrameMethods(t *testing.T) {
 	store, participants := initBadgerStore(cacheSize, t)
 	defer removeBadgerStore(store, t)
 
-	var events []Event
-	var roots []Root
+	var events []*Event
+	var roots []*Root
 	for id, p := range participants {
 		event := NewEvent(
 			[][]byte{[]byte(fmt.Sprintf("%s_%d", p.hex[:5], 0))},
-			[]BlockSignature{{Validator: []byte("validator"), Index: 0, Signature: "r|s"}},
+			[]*BlockSignature{{Validator: []byte("validator"), Index: 0, Signature: "r|s"}},
 			[]string{"", ""},
 			p.pubKey,
 			0, nil)
 		event.Sign(p.privKey)
-		events = append(events, event)
+		events = append(events, &event)
 
-		root := NewBaseRoot(id)
-		roots = append(roots, root)
+		root := NewBaseRoot(int64(id))
+		roots = append(roots, &root)
 	}
 	frame := Frame{
 		Round:  1,
@@ -422,7 +422,7 @@ func TestDBFrameMethods(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		storedFrame, err := store.dbGetFrame(frame.Round)
+		storedFrame, err := store.dbGetFrame(int(frame.Round))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -450,10 +450,10 @@ func TestBadgerEvents(t *testing.T) {
 		var items []Event
 		for k := 0; k < testSize; k++ {
 			event := NewEvent([][]byte{[]byte(fmt.Sprintf("%s_%d", p.hex[:5], k))},
-				[]BlockSignature{{Validator: []byte("validator"), Index: 0, Signature: "r|s"}},
+				[]*BlockSignature{{Validator: []byte("validator"), Index: 0, Signature: "r|s"}},
 				[]string{"", ""},
 				p.pubKey,
-				k, nil)
+				int64(k), nil)
 			items = append(items, event)
 			err := store.SetEvent(event)
 			if err != nil {
@@ -542,7 +542,7 @@ func TestBadgerRounds(t *testing.T) {
 	events := make(map[string]Event)
 	for _, p := range participants {
 		event := NewEvent([][]byte{},
-			[]BlockSignature{},
+			[]*BlockSignature{},
 			[]string{"", ""},
 			p.pubKey,
 			0, nil)
@@ -594,7 +594,7 @@ func TestBadgerBlocks(t *testing.T) {
 		[]byte("tx5"),
 	}
 	frameHash := []byte("this is the frame hash")
-	block := NewBlock(index, roundReceived, frameHash, transactions)
+	block := NewBlock(int64(index), int64(roundReceived), frameHash, transactions)
 
 	sig1, err := block.Sign(participants[0].privKey)
 	if err != nil {
@@ -653,20 +653,20 @@ func TestBadgerFrames(t *testing.T) {
 	store, participants := initBadgerStore(cacheSize, t)
 	defer removeBadgerStore(store, t)
 
-	var events []Event
-	var roots []Root
+	var events []*Event
+	var roots []*Root
 	for id, p := range participants {
 		event := NewEvent(
 			[][]byte{[]byte(fmt.Sprintf("%s_%d", p.hex[:5], 0))},
-			[]BlockSignature{{Validator: []byte("validator"), Index: 0, Signature: "r|s"}},
+			[]*BlockSignature{&BlockSignature{Validator: []byte("validator"), Index: 0, Signature: "r|s"}},
 			[]string{"", ""},
 			p.pubKey,
 			0, nil)
 		event.Sign(p.privKey)
-		events = append(events, event)
+		events = append(events, &event)
 
-		root := NewBaseRoot(id)
-		roots = append(roots, root)
+		root := NewBaseRoot(int64(id))
+		roots = append(roots, &root)
 	}
 	frame := Frame{
 		Round:  1,
@@ -679,7 +679,7 @@ func TestBadgerFrames(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		storedFrame, err := store.GetFrame(frame.Round)
+		storedFrame, err := store.GetFrame(int(frame.Round))
 		if err != nil {
 			t.Fatal(err)
 		}

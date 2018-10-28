@@ -56,7 +56,7 @@ func TestInmemAppCalls(t *testing.T) {
 	t.Run("#3 Get snapshot", func(t *testing.T) {
 		assert := assert.New(t)
 
-		snapshot, err := proxy.GetSnapshot(block.Index())
+		snapshot, err := proxy.GetSnapshot(int(block.Index()))
 		if assert.NoError(err) {
 			assert.Equal(goldSnapshot(), snapshot)
 		}

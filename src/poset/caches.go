@@ -200,7 +200,7 @@ func (psc *ParticipantBlockSignaturesCache) Set(participant string, sig BlockSig
 		return err
 	}
 
-	return psc.rim.Set(id, sig, sig.Index)
+	return psc.rim.Set(id, sig, int(sig.Index))
 }
 
 //returns [participant id] => last BlockSignature Index

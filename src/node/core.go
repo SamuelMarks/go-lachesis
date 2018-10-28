@@ -128,14 +128,14 @@ func (c *Core) SetHeadAndSeq() error {
 			return err
 		}
 		head = root.SelfParent.Hash
-		seq = root.SelfParent.Index
+		seq = int(root.SelfParent.Index)
 	} else {
 		lastEvent, err := c.GetEvent(last)
 		if err != nil {
 			return err
 		}
 		head = last
-		seq = lastEvent.Index()
+		seq = int(lastEvent.Index())
 	}
 
 	c.Head = head
@@ -202,7 +202,7 @@ func (c *Core) InsertEvent(event poset.Event, setWireInfo bool) error {
 
 	if event.Creator() == c.HexID() {
 		c.Head = event.Hex()
-		c.Seq = event.Index()
+		c.Seq = int(event.Index())
 	}
 
 	c.inDegrees[event.Creator()] = 0
@@ -376,16 +376,16 @@ func (c *Core) AddSelfEventBlock(otherHead string) error {
 	}
 
 	var (
-		flagTable map[string]int
+		flagTable map[string]int64
 		err       error
 	)
 
 	if errSelf != nil {
-		flagTable = map[string]int{c.Head: 1}
+		flagTable = map[string]int64{c.Head: 1}
 	} else {
-		flagTable, err = parentEvent.GetFlagTable()
+		flagTable, err = parentEvent.GetUnmarshalledFlagTable()
 		if err != nil {
-			return fmt.Errorf("failed to get self flag table: %s", err)
+			return fmt.Errorf("failed to get flag table: %s", err)
 		}
 	}
 
@@ -401,8 +401,12 @@ func (c *Core) AddSelfEventBlock(otherHead string) error {
 	var batch[][]byte
 	nTxs := min(len(c.transactionPool), c.maxTransactionsInEvent)
 	batch = c.transactionPool[0:nTxs:nTxs]
-	newHead := poset.NewEvent(batch, c.blockSignaturePool,
-		[]string{c.Head, otherHead}, c.PubKey(), c.Seq+1, flagTable)
+	signatures := make([]*poset.BlockSignature, len(c.blockSignaturePool))
+	for i, signature := range c.blockSignaturePool {
+		signatures[i] = &signature
+	}
+	newHead := poset.NewEvent(batch, signatures,
+		[]string{c.Head, otherHead}, c.PubKey(), int64(c.Seq+1), flagTable)
 
 	if err := c.SignAndInsertSelfEvent(newHead); err != nil {
 		return fmt.Errorf("newHead := poset.NewEventBlock: %s", err)

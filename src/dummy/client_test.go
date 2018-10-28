@@ -76,7 +76,7 @@ func TestDummySocketClient(t *testing.T) {
 	initialStateHash := state.stateHash
 	//create a few blocks
 	blocks := [5]poset.Block{}
-	for i := 0; i < 5; i++ {
+	for i := int64(0); i < 5; i++ {
 		blocks[i] = poset.NewBlock(i, i+1, []byte{}, [][]byte{[]byte(fmt.Sprintf("block %d transaction", i))})
 	}
 
@@ -95,7 +95,7 @@ func TestDummySocketClient(t *testing.T) {
 
 	assert.Equal(expectedStateHash, stateHash)
 
-	snapshot, err := appProxy.GetSnapshot(blocks[0].Index())
+	snapshot, err := appProxy.GetSnapshot(int(blocks[0].Index()))
 	assert.NoError(err)
 
 	assert.Equal(expectedStateHash, snapshot)

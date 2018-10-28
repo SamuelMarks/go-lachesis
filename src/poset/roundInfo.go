@@ -1,50 +1,24 @@
 package poset
 
 import (
-	"bytes"
-	"encoding/json"
+	"github.com/golang/protobuf/proto"
 )
-
-type Trilean int
-
-const (
-	Undefined Trilean = iota
-	True
-	False
-)
-
-var trileans = []string{"Undefined", "True", "False"}
-
-func (t Trilean) String() string {
-	return trileans[t]
-}
 
 type pendingRound struct {
 	Index   int
 	Decided bool
 }
 
-type RoundEvent struct {
-	Consensus bool
-	Witness   bool
-	Famous    Trilean
-}
-
-type RoundInfo struct {
-	Events map[string]RoundEvent
-	queued bool
-}
-
 func NewRoundInfo() *RoundInfo {
 	return &RoundInfo{
-		Events: make(map[string]RoundEvent),
+		Events: make(map[string]*RoundEvent),
 	}
 }
 
 func (r *RoundInfo) AddEvent(x string, witness bool) {
 	_, ok := r.Events[x]
 	if !ok {
-		r.Events[x] = RoundEvent{
+		r.Events[x] = &RoundEvent{
 			Witness: witness,
 		}
 	}
@@ -53,7 +27,7 @@ func (r *RoundInfo) AddEvent(x string, witness bool) {
 func (r *RoundInfo) SetConsensusEvent(x string) {
 	e, ok := r.Events[x]
 	if !ok {
-		e = RoundEvent{}
+		e = &RoundEvent{}
 	}
 	e.Consensus = true
 	r.Events[x] = e
@@ -62,14 +36,14 @@ func (r *RoundInfo) SetConsensusEvent(x string) {
 func (r *RoundInfo) SetFame(x string, f bool) {
 	e, ok := r.Events[x]
 	if !ok {
-		e = RoundEvent{
+		e = &RoundEvent{
 			Witness: true,
 		}
 	}
 	if f {
-		e.Famous = True
+		e.Famous = Trilean_TRUE
 	} else {
-		e.Famous = False
+		e.Famous = Trilean_FALSE
 	}
 	r.Events[x] = e
 }
@@ -77,7 +51,7 @@ func (r *RoundInfo) SetFame(x string, f bool) {
 //return true if no witnesses' fame is left undefined
 func (r *RoundInfo) WitnessesDecided() bool {
 	for _, e := range r.Events {
-		if e.Witness && e.Famous == Undefined {
+		if e.Witness && e.Famous == Trilean_UNDEFINED {
 			return false
 		}
 	}
@@ -120,7 +94,7 @@ func (r *RoundInfo) ConsensusEvents() []string {
 func (r *RoundInfo) FamousWitnesses() []string {
 	var res []string
 	for x, e := range r.Events {
-		if e.Witness && e.Famous == True {
+		if e.Witness && e.Famous == Trilean_TRUE {
 			res = append(res, x)
 		}
 	}
@@ -129,24 +103,17 @@ func (r *RoundInfo) FamousWitnesses() []string {
 
 func (r *RoundInfo) IsDecided(witness string) bool {
 	w, ok := r.Events[witness]
-	return ok && w.Witness && w.Famous != Undefined
+	return ok && w.Witness && w.Famous != Trilean_UNDEFINED
 }
 
 func (r *RoundInfo) Marshal() ([]byte, error) {
-	var b bytes.Buffer
-	enc := json.NewEncoder(&b)
-	if err := enc.Encode(r); err != nil {
-		return nil, err
-	}
-	return b.Bytes(), nil
+	return proto.Marshal(r)
 }
 
 func (r *RoundInfo) Unmarshal(data []byte) error {
-	b := bytes.NewBuffer(data)
-	dec := json.NewDecoder(b) //will read from b
-	return dec.Decode(r)
+	return proto.Unmarshal(data, r)
 }
 
 func (r *RoundInfo) IsQueued() bool {
-	return r.queued
+	return r.Queued
 }

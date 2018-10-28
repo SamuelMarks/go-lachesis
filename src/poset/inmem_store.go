@@ -29,7 +29,7 @@ func NewInmemStore(participants *peers.Peers, cacheSize int) *InmemStore {
 	rootsByParticipant := make(map[string]Root)
 
 	for pk, pid := range participants.ByPubKey {
-		root := NewBaseRoot(pid.ID)
+		root := NewBaseRoot(int64(pid.ID))
 		rootsByParticipant[pk] = root
 	}
 
@@ -83,7 +83,7 @@ func (s *InmemStore) SetEvent(event Event) error {
 		return err
 	}
 	if cm.Is(err, cm.KeyNotFound) {
-		if err := s.addParticpantEvent(event.Creator(), key, event.Index()); err != nil {
+		if err := s.addParticpantEvent(event.Creator(), key, int(event.Index())); err != nil {
 			return err
 		}
 	}
@@ -109,7 +109,7 @@ func (s *InmemStore) ParticipantEvent(participant string, index int) (string, er
 		if !ok {
 			return "", cm.NewStoreErr("InmemStore.Roots", cm.NoRoot, participant)
 		}
-		if root.SelfParent.Index == index {
+		if root.SelfParent.Index == int64(index) {
 			ev = root.SelfParent.Hash
 			err = nil
 		}
@@ -157,7 +157,7 @@ func (s *InmemStore) KnownEvents() map[int]int {
 		if known[pid.ID] == -1 {
 			root, ok := s.rootsByParticipant[p]
 			if ok {
-				known[pid.ID] = root.SelfParent.Index
+				known[pid.ID] = int(root.SelfParent.Index)
 			}
 		}
 	}
@@ -238,13 +238,13 @@ func (s *InmemStore) GetBlock(index int) (Block, error) {
 
 func (s *InmemStore) SetBlock(block Block) error {
 	index := block.Index()
-	_, err := s.GetBlock(index)
+	_, err := s.GetBlock(int(index))
 	if err != nil && !cm.Is(err, cm.KeyNotFound) {
 		return err
 	}
 	s.blockCache.Add(index, block)
-	if index > s.lastBlock {
-		s.lastBlock = index
+	if index > int64(s.lastBlock) {
+		s.lastBlock = int(index)
 	}
 	return nil
 }
@@ -263,7 +263,7 @@ func (s *InmemStore) GetFrame(index int) (Frame, error) {
 
 func (s *InmemStore) SetFrame(frame Frame) error {
 	index := frame.Round
-	_, err := s.GetFrame(index)
+	_, err := s.GetFrame(int(index))
 	if err != nil && !cm.Is(err, cm.KeyNotFound) {
 		return err
 	}

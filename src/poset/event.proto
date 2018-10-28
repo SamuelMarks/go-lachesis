@@ -1,0 +1,45 @@
+syntax = "proto3";
+package poset;
+
+message BlockSignature {
+  bytes Validator = 1;
+  int64 Index = 2;
+  string Signature = 3;
+}
+
+message EventBody {
+  repeated bytes Transactions = 1;
+  repeated string Parents = 2;
+  bytes Creator = 3;
+  int64 Index = 4;
+  repeated BlockSignature BlockSignatures = 5;
+  int64 selfParentIndex = 6;
+  int64 otherParentCreatorID = 7;
+  int64 otherParentIndex = 8;
+  int64 creatorID = 9;
+}
+
+message EventCoordinates {
+  string hash = 1;
+  int64 index = 2;
+}
+
+message Index {
+  int64 participantId = 1;
+  EventCoordinates event = 2;
+}
+
+message Event {
+  EventBody Body = 1;
+  string Signature = 2;
+  int64 topologicalIndex = 3;
+  int64 round = 4;
+  int64 lamportTimestamp = 5;
+  int64 roundReceived = 6;
+  repeated Index lastAncestors = 7;
+  repeated Index firstDescendants = 8;
+  string creator = 9;
+  bytes hash = 10;
+  string hex = 11;
+  bytes FlagTable = 12;
+}

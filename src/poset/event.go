@@ -1,50 +1,23 @@
 package poset
 
 import (
-	"bytes"
 	"crypto/ecdsa"
-	"encoding/json"
 	"fmt"
 
 	"github.com/andrecronje/lachesis/src/crypto"
+	"github.com/golang/protobuf/proto"
 )
 
 /*******************************************************************************
 EventBody
 *******************************************************************************/
 
-type EventBody struct {
-	Transactions    [][]byte         //the payload
-	Parents         []string         //hashes of the event's parents, self-parent first
-	Creator         []byte           //creator's public key
-	Index           int              //index in the sequence of events created by Creator
-	BlockSignatures []BlockSignature //list of Block signatures signed by the Event's Creator ONLY
-
-	//wire
-	//It is cheaper to send ints than hashes over the wire
-	selfParentIndex      int
-	otherParentCreatorID int
-	otherParentIndex     int
-	creatorID            int
-}
-
-//json encoding of body only
 func (e *EventBody) Marshal() ([]byte, error) {
-	var b bytes.Buffer
-	enc := json.NewEncoder(&b) //will write to b
-	if err := enc.Encode(e); err != nil {
-		return nil, err
-	}
-	return b.Bytes(), nil
+	return proto.Marshal(e)
 }
 
 func (e *EventBody) Unmarshal(data []byte) error {
-	b := bytes.NewBuffer(data)
-	dec := json.NewDecoder(b) //will read from b
-	if err := dec.Decode(e); err != nil {
-		return err
-	}
-	return nil
+	return proto.Unmarshal(data, e)
 }
 
 func (e *EventBody) Hash() ([]byte, error) {
@@ -59,16 +32,11 @@ func (e *EventBody) Hash() ([]byte, error) {
 Event
 *******************************************************************************/
 
-type EventCoordinates struct {
-	hash  string
-	index int
-}
+type OrderedEventCoordinates []*Index
 
-type OrderedEventCoordinates []Index
-
-func (o OrderedEventCoordinates) GetIDIndex(id int) int {
+func GetIDIndex(o OrderedEventCoordinates, id int64) int {
 	for i, idx := range o {
-		if idx.participantId == id {
+		if idx.ParticipantId == id {
 			return i
 		}
 	}
@@ -76,56 +44,29 @@ func (o OrderedEventCoordinates) GetIDIndex(id int) int {
 	return -1
 }
 
-func (o OrderedEventCoordinates) GetByID(id int) (Index, bool) {
+func GetByID(o OrderedEventCoordinates, id int64) (Index, bool) {
 	for _, idx := range o {
-		if idx.participantId == id {
-			return idx, true
+		if idx.ParticipantId == id {
+			return *idx, true
 		}
 	}
 
 	return Index{}, false
 }
 
-func (o *OrderedEventCoordinates) Add(id int, event EventCoordinates) {
-	*o = append(*o, Index{
-		participantId: id,
-		event:         event,
+func (o *OrderedEventCoordinates) Add(id int64, event EventCoordinates) {
+	*o = append(*o, &Index{
+		ParticipantId: id,
+		Event:         &event,
 	})
-}
-
-type Index struct {
-	participantId int
-	event         EventCoordinates
 }
 
 // -----
 
-type Event struct {
-	Body      EventBody
-	Signature string //creator's digital signature of body
-
-	topologicalIndex int
-
-	//used for sorting
-	round            *int
-	lamportTimestamp *int
-
-	roundReceived *int
-
-	lastAncestors    OrderedEventCoordinates //[participant fake id] => last ancestor
-	firstDescendants OrderedEventCoordinates //[participant fake id] => first descendant
-
-	creator string
-	hash    []byte
-	hex     string
-
-	FlagTable []byte // FlagTable stores connection information
-}
-
 // NewEvent creates new block event.
-func NewEvent(transactions [][]byte, blockSignatures []BlockSignature,
-	parents []string, creator []byte, index int,
-	flagTable map[string]int) Event {
+func NewEvent(transactions [][]byte, blockSignatures []*BlockSignature,
+	parents []string, creator []byte, index int64,
+	flagTable map[string]int64) Event {
 
 	body := EventBody{
 		Transactions:    transactions,
@@ -135,19 +76,17 @@ func NewEvent(transactions [][]byte, blockSignatures []BlockSignature,
 		Index:           index,
 	}
 
-	ft, _ := json.Marshal(flagTable)
+	// TODO: We shouldn't eat the error here...
+	ft, _ := proto.Marshal(&FlagTableWrapper { Body: flagTable })
 
 	return Event{
-		Body:      body,
-		FlagTable: ft,
+		Body:      &body,
+		flagTable: ft,
+		Round: -1,
+		TopologicalIndex: -1,
+		LamportTimestamp: -1,
+		RoundReceived: -1,
 	}
-}
-
-func (e *Event) Creator() string {
-	if e.creator == "" {
-		e.creator = fmt.Sprintf("0x%X", e.Body.Creator)
-	}
-	return e.creator
 }
 
 func (e *Event) SelfParent() string {
@@ -162,11 +101,11 @@ func (e *Event) Transactions() [][]byte {
 	return e.Body.Transactions
 }
 
-func (e *Event) Index() int {
+func (e *Event) Index() int64 {
 	return e.Body.Index
 }
 
-func (e *Event) BlockSignatures() []BlockSignature {
+func (e *Event) BlockSignatures() []*BlockSignature {
 	return e.Body.BlockSignatures
 }
 
@@ -213,20 +152,19 @@ func (e *Event) Verify() (bool, error) {
 	return crypto.Verify(pubKey, signBytes, r, s), nil
 }
 
-//json encoding of body and signature
 func (e *Event) Marshal() ([]byte, error) {
-	var b bytes.Buffer
-	enc := json.NewEncoder(&b)
-	if err := enc.Encode(e); err != nil {
-		return nil, err
-	}
-	return b.Bytes(), nil
+	return proto.Marshal(e)
 }
 
 func (e *Event) Unmarshal(data []byte) error {
-	b := bytes.NewBuffer(data)
-	dec := json.NewDecoder(b) //will read from b
-	return dec.Decode(e)
+	return proto.Unmarshal(data, e)
+}
+
+func (e *Event) Creator() string {
+	if e.creator == "" {
+		e.creator = fmt.Sprintf("0x%X", e.Body.Creator)
+	}
+	return e.creator
 }
 
 //sha256 hash of body
@@ -250,34 +188,25 @@ func (e *Event) Hex() string {
 }
 
 func (e *Event) SetRound(r int) {
-	if e.round == nil {
-		e.round = new(int)
-	}
-	*e.round = r
+	e.Round = int64(r)
 }
 
-func (e *Event) SetLamportTimestamp(t int) {
-	if e.lamportTimestamp == nil {
-		e.lamportTimestamp = new(int)
-	}
-	*e.lamportTimestamp = t
+func (e *Event) SetLamportTimestamp(t int64) {
+	e.LamportTimestamp = t
 }
 
-func (e *Event) SetRoundReceived(rr int) {
-	if e.roundReceived == nil {
-		e.roundReceived = new(int)
-	}
-	*e.roundReceived = rr
+func (e *Event) SetRoundReceived(rr int64) {
+	e.RoundReceived = rr
 }
 
-func (e *Event) SetWireInfo(selfParentIndex,
-	otherParentCreatorID,
-	otherParentIndex,
-	creatorID int) {
-	e.Body.selfParentIndex = selfParentIndex
-	e.Body.otherParentCreatorID = otherParentCreatorID
-	e.Body.otherParentIndex = otherParentIndex
-	e.Body.creatorID = creatorID
+func (e *Event) SetWireInfo(SelfParentIndex,
+	OtherParentCreatorID,
+	OtherParentIndex,
+	CreatorID int) {
+	e.Body.SelfParentIndex = int64(SelfParentIndex)
+	e.Body.OtherParentCreatorID = int64(OtherParentCreatorID)
+	e.Body.OtherParentIndex = int64(OtherParentIndex)
+	e.Body.CreatorID = int64(CreatorID)
 }
 
 func (e *Event) WireBlockSignatures() []WireBlockSignature {
@@ -297,39 +226,39 @@ func (e *Event) ToWire() WireEvent {
 	return WireEvent{
 		Body: WireBody{
 			Transactions:         e.Body.Transactions,
-			SelfParentIndex:      e.Body.selfParentIndex,
-			OtherParentCreatorID: e.Body.otherParentCreatorID,
-			OtherParentIndex:     e.Body.otherParentIndex,
-			CreatorID:            e.Body.creatorID,
-			Index:                e.Body.Index,
+			SelfParentIndex:      int(e.Body.SelfParentIndex),
+			OtherParentCreatorID: int(e.Body.OtherParentCreatorID),
+			OtherParentIndex:     int(e.Body.OtherParentIndex),
+			CreatorID:            int(e.Body.CreatorID),
+			Index:                int(e.Body.Index),
 			BlockSignatures:      e.WireBlockSignatures(),
 		},
 		Signature: e.Signature,
-		FlagTable: e.FlagTable,
+		FlagTable: e.flagTable,
 	}
 }
 
 // GetFlagTable returns the flag table.
-func (e *Event) GetFlagTable() (result map[string]int, err error) {
-	result = make(map[string]int)
-	err = json.Unmarshal(e.FlagTable, &result)
-	return result, err
+func (e *Event) GetUnmarshalledFlagTable() (result map[string]int64, err error) {
+	wrapper := &FlagTableWrapper{}
+	err = proto.Unmarshal(e.flagTable, wrapper)
+	return wrapper.Body, err
 }
 
 // MargeFlagTable returns merged flag table object.
 func (e *Event) MargeFlagTable(
-	dst map[string]int) (result map[string]int, err error) {
-	src := make(map[string]int)
-	if err := json.Unmarshal(e.FlagTable, &src); err != nil {
+	dst map[string]int64) (result map[string]int64, err error) {
+	wrapper := &FlagTableWrapper{}
+	if err := proto.Unmarshal(e.flagTable, wrapper); err != nil {
 		return nil, err
 	}
 
 	for id, flag := range dst {
-		if src[id] == 0 && flag == 1 {
-			src[id] = 1
+		if wrapper.Body[id] == 0 && flag == 1 {
+			wrapper.Body[id] = 1
 		}
 	}
-	return src, err
+	return wrapper.Body, err
 }
 
 func rootSelfParent(participantID int) string {
@@ -348,7 +277,7 @@ type ByTopologicalOrder []Event
 func (a ByTopologicalOrder) Len() int      { return len(a) }
 func (a ByTopologicalOrder) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByTopologicalOrder) Less(i, j int) bool {
-	return a[i].topologicalIndex < a[j].topologicalIndex
+	return a[i].TopologicalIndex < a[j].TopologicalIndex
 }
 
 // ByLamportTimestamp implements sort.Interface for []Event based on
@@ -360,12 +289,8 @@ func (a ByLamportTimestamp) Len() int      { return len(a) }
 func (a ByLamportTimestamp) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByLamportTimestamp) Less(i, j int) bool {
 	it, jt := -1, -1
-	if a[i].lamportTimestamp != nil {
-		it = *a[i].lamportTimestamp
-	}
-	if a[j].lamportTimestamp != nil {
-		jt = *a[j].lamportTimestamp
-	}
+	it = int(a[i].LamportTimestamp)
+	jt = int(a[j].LamportTimestamp)
 	if it != jt {
 		return it < jt
 	}
@@ -403,7 +328,7 @@ func (we *WireEvent) BlockSignatures(validator []byte) []BlockSignature {
 		for k, bs := range we.Body.BlockSignatures {
 			blockSignatures[k] = BlockSignature{
 				Validator: validator,
-				Index:     bs.Index,
+				Index:     int64(bs.Index),
 				Signature: bs.Signature,
 			}
 		}

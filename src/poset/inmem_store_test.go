@@ -47,10 +47,10 @@ func TestInmemEvents(t *testing.T) {
 			var items []Event
 			for k := 0; k < testSize; k++ {
 				event := NewEvent([][]byte{[]byte(fmt.Sprintf("%s_%d", p.hex[:5], k))},
-					[]BlockSignature{{Validator: []byte("validator"), Index: 0, Signature: "r|s"}},
+					[]*BlockSignature{&BlockSignature{Validator: []byte("validator"), Index: 0, Signature: "r|s"}},
 					[]string{"", ""},
 					p.pubKey,
-					k, nil)
+					int64(k), nil)
 				_ = event.Hex() //just to set private variables
 				items = append(items, event)
 				err := store.SetEvent(event)
@@ -126,7 +126,7 @@ func TestInmemRounds(t *testing.T) {
 	events := make(map[string]Event)
 	for _, p := range participants {
 		event := NewEvent([][]byte{},
-			[]BlockSignature{},
+			[]*BlockSignature{},
 			[]string{"", ""},
 			p.pubKey,
 			0, nil)
@@ -181,7 +181,7 @@ func TestInmemBlocks(t *testing.T) {
 		[]byte("tx5"),
 	}
 	frameHash := []byte("this is the frame hash")
-	block := NewBlock(index, roundReceived, frameHash, transactions)
+	block := NewBlock(int64(index), int64(roundReceived), frameHash, transactions)
 
 	sig1, err := block.Sign(participants[0].privKey)
 	if err != nil {

@@ -1,13 +1,12 @@
 package poset
 
 import (
-	"bytes"
 	"crypto/ecdsa"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	"github.com/andrecronje/lachesis/src/crypto"
+	"github.com/golang/protobuf/proto"
 )
 
 //StateHash is the hash of the current state of transactions, if you have one
@@ -15,31 +14,12 @@ import (
 //stateHash will be different
 //statehash should be ignored for validator checking
 
-type BlockBody struct {
-	Index         int
-	RoundReceived int
-	StateHash     []byte
-	FrameHash     []byte
-	Transactions  [][]byte
-}
-
-//json encoding of body only
 func (bb *BlockBody) Marshal() ([]byte, error) {
-	bf := bytes.NewBuffer([]byte{})
-	enc := json.NewEncoder(bf)
-	if err := enc.Encode(bb); err != nil {
-		return nil, err
-	}
-	return bf.Bytes(), nil
+	return proto.Marshal(bb)
 }
 
 func (bb *BlockBody) Unmarshal(data []byte) error {
-	b := bytes.NewBuffer(data)
-	dec := json.NewDecoder(b) //will read from b
-	if err := dec.Decode(bb); err != nil {
-		return err
-	}
-	return nil
+	return proto.Unmarshal(data, bb)
 }
 
 func (bb *BlockBody) Hash() ([]byte, error) {
@@ -52,32 +32,16 @@ func (bb *BlockBody) Hash() ([]byte, error) {
 
 //------------------------------------------------------------------------------
 
-type BlockSignature struct {
-	Validator []byte
-	Index     int
-	Signature string
-}
-
 func (bs *BlockSignature) ValidatorHex() string {
 	return fmt.Sprintf("0x%X", bs.Validator)
 }
 
 func (bs *BlockSignature) Marshal() ([]byte, error) {
-	bf := bytes.NewBuffer([]byte{})
-	enc := json.NewEncoder(bf)
-	if err := enc.Encode(bs); err != nil {
-		return nil, err
-	}
-	return bf.Bytes(), nil
+	return proto.Marshal(bs)
 }
 
 func (bs *BlockSignature) Unmarshal(data []byte) error {
-	b := bytes.NewBuffer(data)
-	dec := json.NewDecoder(b) //will read from b
-	if err := dec.Decode(bs); err != nil {
-		return err
-	}
-	return nil
+	return proto.Unmarshal(data, bs)
 }
 
 func (bs *BlockSignature) ToWire() WireBlockSignature {
@@ -87,22 +51,9 @@ func (bs *BlockSignature) ToWire() WireBlockSignature {
 	}
 }
 
-type WireBlockSignature struct {
-	Index     int
-	Signature string
-}
-
 //------------------------------------------------------------------------------
 
-type Block struct {
-	Body       BlockBody
-	Signatures map[string]string // [validator hex] => signature
-
-	hash []byte
-	hex  string
-}
-
-func NewBlockFromFrame(blockIndex int, frame Frame) (Block, error) {
+func NewBlockFromFrame(blockIndex int64, frame Frame) (Block, error) {
 	frameHash, err := frame.Hash()
 	if err != nil {
 		return Block{}, err
@@ -114,7 +65,7 @@ func NewBlockFromFrame(blockIndex int, frame Frame) (Block, error) {
 	return NewBlock(blockIndex, frame.Round, frameHash, transactions), nil
 }
 
-func NewBlock(blockIndex, roundReceived int, frameHash []byte, txs [][]byte) Block {
+func NewBlock(blockIndex, roundReceived int64, frameHash []byte, txs [][]byte) Block {
 	body := BlockBody{
 		Index:         blockIndex,
 		RoundReceived: roundReceived,
@@ -122,12 +73,12 @@ func NewBlock(blockIndex, roundReceived int, frameHash []byte, txs [][]byte) Blo
 		Transactions:  txs,
 	}
 	return Block{
-		Body:       body,
+		Body:       &body,
 		Signatures: make(map[string]string),
 	}
 }
 
-func (b *Block) Index() int {
+func (b *Block) Index() int64 {
 	return b.Body.Index
 }
 
@@ -135,7 +86,7 @@ func (b *Block) Transactions() [][]byte {
 	return b.Body.Transactions
 }
 
-func (b *Block) RoundReceived() int {
+func (b *Block) RoundReceived() int64 {
 	return b.Body.RoundReceived
 }
 
@@ -147,14 +98,14 @@ func (b *Block) FrameHash() []byte {
 	return b.Body.FrameHash
 }
 
-func (b *Block) GetSignatures() []BlockSignature {
+func (b *Block) GetBlockSignatures() []BlockSignature {
 	res := make([]BlockSignature, len(b.Signatures))
 	i := 0
 	for val, sig := range b.Signatures {
 		validatorBytes, _ := hex.DecodeString(val[2:])
 		res[i] = BlockSignature{
 			Validator: validatorBytes,
-			Index:     b.Index(),
+			Index:     int64(b.Index()),
 			Signature: sig,
 		}
 		i++
@@ -171,7 +122,7 @@ func (b *Block) GetSignature(validator string) (res BlockSignature, err error) {
 	validatorBytes, _ := hex.DecodeString(validator[2:])
 	return BlockSignature{
 		Validator: validatorBytes,
-		Index:     b.Index(),
+		Index:     int64(b.Index()),
 		Signature: sig,
 	}, nil
 }
@@ -181,21 +132,11 @@ func (b *Block) AppendTransactions(txs [][]byte) {
 }
 
 func (b *Block) Marshal() ([]byte, error) {
-	bf := bytes.NewBuffer([]byte{})
-	enc := json.NewEncoder(bf)
-	if err := enc.Encode(b); err != nil {
-		return nil, err
-	}
-	return bf.Bytes(), nil
+	return proto.Marshal(b)
 }
 
 func (b *Block) Unmarshal(data []byte) error {
-	bf := bytes.NewBuffer(data)
-	dec := json.NewDecoder(bf)
-	if err := dec.Decode(b); err != nil {
-		return err
-	}
-	return nil
+	return proto.Unmarshal(data, b)
 }
 
 func (b *Block) Hash() ([]byte, error) {
@@ -236,7 +177,7 @@ func (b *Block) Sign(privKey *ecdsa.PrivateKey) (bs BlockSignature, err error) {
 	}
 	signature := BlockSignature{
 		Validator: crypto.FromECDSAPub(&privKey.PublicKey),
-		Index:     b.Index(),
+		Index:     int64(b.Index()),
 		Signature: crypto.EncodeSignature(R, S),
 	}
 
