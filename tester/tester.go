@@ -5,24 +5,23 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
-	"time"
 
 	_ "os"
 	_ "sync"
 
 	"github.com/andrecronje/lachesis/src/peers"
-	"github.com/andrecronje/lachesis/src/proxy/socket/lachesis"
 	"github.com/sirupsen/logrus"
+	"github.com/andrecronje/lachesis/src/proxy"
 )
 
 func PingNodesN(participants []*peers.Peer, p peers.PubKeyPeers, n uint64, logger *logrus.Logger) {
-	proxies := make(map[int]*lachesis.WebsocketLachesisProxy)
+	proxies := make(map[int]*proxy.GrpcLachesisProxy)
 	for _, participant := range participants {
 		node := p[participant.PubKeyHex]
 		host_port := strings.Split(node.NetAddr, ":")
 		port, err := strconv.Atoi(host_port[1])
 		addr := fmt.Sprintf("%s:%d", host_port[0], port-3000 /*9000*/)
-		proxy, err := lachesis.NewWebsocketLachesisProxy(addr, nil, 10*time.Second, logger)
+		proxy, err := proxy.NewGrpcLachesisProxy(addr, logger)
 		if err != nil {
 			fmt.Printf("error:\t\t\t%s\n", err.Error())
 			fmt.Printf("Failed to create WebsocketLachesisProxy:\t\t\t%s (id=%d)\n", participant.NetAddr, node.ID)
@@ -51,7 +50,7 @@ func PingNodesN(participants []*peers.Peer, p peers.PubKeyPeers, n uint64, logge
 	fmt.Println("Pinging stopped after ", n, " iterations")
 }
 
-func transact(proxy *lachesis.WebsocketLachesisProxy) (string, error) {
+func transact(proxy *proxy.GrpcLachesisProxy) (string, error) {
 
 	// Ethereum txns are ~108 bytes. Bitcoin txns are ~250 bytes. We'll assume
 	// our txns are ~120 bytes in size
