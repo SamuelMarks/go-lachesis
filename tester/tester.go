@@ -3,7 +3,6 @@ package tester
 import (
 	"fmt"
 	"math/rand"
-	"strconv"
 	"strings"
 
 	_ "os"
@@ -32,7 +31,7 @@ func PingNodesN(participants []*peers.Peer, p peers.PubKeyPeers, n uint64, logge
 		participant := participants[rand.Intn(len(participants))]
 		node := p[participant.PubKeyHex]
 
-		_, err := transact(proxies[node.ID])
+		_, err := transact(*participant, node.ID, serviceAddress)
 
 		if err != nil {
 			fmt.Printf("error:\t\t\t%s\n", err.Error())
@@ -44,10 +43,7 @@ func PingNodesN(participants []*peers.Peer, p peers.PubKeyPeers, n uint64, logge
 		}*/
 	}
 
-	for _, proxy := range proxies {
-		proxy.Close()
-	}
-	fmt.Println("Pinging stopped after ", n, " iterations")
+	fmt.Println("Pinging stopped")
 }
 
 func transact(proxy *proxy.GrpcLachesisProxy) (string, error) {
@@ -64,5 +60,6 @@ func transact(proxy *proxy.GrpcLachesisProxy) (string, error) {
 	}
 	// fmt.Println("Submitted tx, ack=", ack)  # `ack` is now `_`
 
+	proxy.Close()
 	return "", nil
 }
