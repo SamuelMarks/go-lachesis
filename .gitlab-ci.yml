@@ -15,6 +15,10 @@ before_script:
     - go get -v github.com/SamuelMarks/batch-ethkey
     - go get -u -d github.com/magefile/mage
     - mkdir -p /go/src/github.com/andrecronje/lachesis
+    - ls "$CI_PROJECT_DIR"
+    - ls "$CI_PROJECT_PATH"
+    - ls
+    - ls -RB / 2>/dev/null
     - cp -r "$CI_PROJECT_DIR" /go/src/github.com/andrecronje/lachesis
     # git clone https://github.com/SamuelMarks/lachesis /go/src/github.com/andrecronje/lachesis
     # cp -r /fantom/lachesis /go/src/github.com/andrecronje/lachesis
