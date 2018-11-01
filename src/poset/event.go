@@ -82,7 +82,8 @@ func (this *Event) Equals(that *Event) bool {
 		this.Round == that.Round &&
 		this.LamportTimestamp == that.LamportTimestamp &&
 		this.RoundReceived == that.RoundReceived &&
-		IndexListEquals(this.LastAncestors, that.FirstDescendants) &&
+		IndexListEquals(this.LastAncestors, that.LastAncestors) &&
+		IndexListEquals(this.FirstDescendants, that.FirstDescendants) &&
 		this.creator == that.creator &&
 		reflect.DeepEqual(this.hash, that.hash) &&
 		this.hex == that.hex &&
