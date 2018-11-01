@@ -165,6 +165,8 @@ This will download all dependencies and put them in the **vendor** folder.
 Bash scripts used in this project assume the use of GNU versions of coreutils.
 Please ensure you have GNU versions of these programs installed:-
 
+It also needs the command line utility `jq` installed.
+
 example for macos:
 ```
 # --with-default-names makes the `sed` and `awk` commands default to gnu sed and gnu awk respectively.
