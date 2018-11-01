@@ -3,10 +3,91 @@ package poset
 import (
 	"crypto/ecdsa"
 	"fmt"
+	"reflect"
 
 	"github.com/andrecronje/lachesis/src/crypto"
 	"github.com/golang/protobuf/proto"
 )
+
+/*******************************************************************************
+Comparison functions
+*******************************************************************************/
+
+func BytesEquals(this []byte, that []byte) bool {
+	if len(this) != len(that) {
+		return false
+	}
+	for i, v := range this {
+		if v != that[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func (this *BlockSignature) Equals(that *BlockSignature) bool {
+	return reflect.DeepEqual(this.Validator, that.Validator) &&
+		this.Index == that.Index &&
+		this.Signature == that.Signature
+}
+
+func BlockSignatureListEquals(this []*BlockSignature, that []*BlockSignature) bool {
+	if len(this) != len(that) {
+		return false
+	}
+	for i, v := range this {
+		if !v.Equals(that[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func (this *EventBody) Equals(that *EventBody) bool {
+	return reflect.DeepEqual(this.Transactions, that.Transactions) &&
+		reflect.DeepEqual(this.Parents, that.Parents) &&
+		reflect.DeepEqual(this.Creator, that.Creator) &&
+		this.Index == that.Index &&
+		BlockSignatureListEquals(this.BlockSignatures, that.BlockSignatures) &&
+		this.SelfParentIndex == that.SelfParentIndex &&
+		this.OtherParentCreatorID == that.OtherParentCreatorID &&
+		this.OtherParentIndex == that.OtherParentIndex &&
+		this.CreatorID == that.CreatorID
+}
+
+func (this *EventCoordinates) Equals(that *EventCoordinates) bool {
+	return this.Hash == that.Hash && this.Index == that.Index
+}
+
+func (this *Index) Equals(that *Index) bool {
+	return this.ParticipantId == that.ParticipantId && this.Event.Equals(that.Event)
+}
+
+func IndexListEquals(this []*Index, that []*Index) bool {
+	if len(this) != len(that) {
+		return false
+	}
+	for i, v := range this {
+		if !v.Equals(that[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func (this *Event) Equals(that *Event) bool {
+	return this.Body.Equals(that.Body) &&
+		this.Signature == that.Signature &&
+		this.TopologicalIndex == that.TopologicalIndex &&
+		this.Round == that.Round &&
+		this.LamportTimestamp == that.LamportTimestamp &&
+		this.RoundReceived == that.RoundReceived &&
+		IndexListEquals(this.LastAncestors, that.FirstDescendants) &&
+		this.creator == that.creator &&
+		reflect.DeepEqual(this.hash, that.hash) &&
+		this.hex == that.hex &&
+		BytesEquals(this.flagTable, that.flagTable)
+}
 
 /*******************************************************************************
 EventBody

@@ -74,6 +74,14 @@ func NewBaseRootEvent(creatorID int64) *RootEvent {
 	return res
 }
 
+func (this *RootEvent) Equals(that *RootEvent) bool {
+	return this.Hash == that.Hash &&
+		this.CreatorID == that.CreatorID &&
+		this.Index == that.Index &&
+		this.LamportTimestamp == that.LamportTimestamp &&
+		this.Round == that.Round
+}
+
 //Root forms a base on top of which a participant's Events can be inserted. In
 //contains the SelfParent of the first descendant of the Root, as well as other
 //Events, belonging to a past before the Root, which might be referenced
@@ -89,4 +97,23 @@ func NewBaseRoot(creatorID int64) Root {
 		Others:     map[string]*RootEvent{},
 	}
 	return res
+}
+
+func EqualsMapStringRootEvent(this map[string]*RootEvent, that map[string]*RootEvent) bool {
+	if len(this) != len(that) {
+		return false
+	}
+	for k, v := range this {
+		v2, ok := that[k]
+		if !ok || !v2.Equals(v) {
+			return false
+		}
+	}
+	return true
+}
+
+func (this *Root) Equals(that *Root) bool {
+	return this.NextRound == that.NextRound &&
+		this.SelfParent.Equals(that.SelfParent) &&
+		EqualsMapStringRootEvent(this.Others, that.Others)
 }

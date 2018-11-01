@@ -39,7 +39,7 @@ func TestMarshallBody(t *testing.T) {
 	if !reflect.DeepEqual(body.Transactions, newBody.Transactions) {
 		t.Fatalf("Transactions do not match. Expected %#v, got %#v", body.Transactions, newBody.Transactions)
 	}
-	if !reflect.DeepEqual(body.BlockSignatures, newBody.BlockSignatures) {
+	if !BlockSignatureListEquals(body.BlockSignatures, newBody.BlockSignatures) {
 		t.Fatalf("BlockSignatures do not match. Expected %#v, got %#v", body.BlockSignatures, newBody.BlockSignatures)
 	}
 	if !reflect.DeepEqual(body.Parents, newBody.Parents) {
@@ -94,7 +94,7 @@ func TestMarshallEvent(t *testing.T) {
 		t.Fatalf("Error unmarshalling Event: %s", err)
 	}
 
-	if !reflect.DeepEqual(*newEvent, event) {
+	if !newEvent.Equals(&event) {
 		t.Fatalf("Events are not deeply equal")
 	}
 }

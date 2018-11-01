@@ -105,3 +105,27 @@ func (r *RoundInfo) IsDecided(witness string) bool {
 func (r *RoundInfo) IsQueued() bool {
 	return r.Queued
 }
+
+func (this *RoundEvent) Equals(that *RoundEvent) bool {
+	return this.Consensus == that.Consensus &&
+		this.Witness == that.Witness &&
+		this.Famous == that.Famous
+}
+
+func EqualsMapStringRoundEvent(this map[string]*RoundEvent, that map[string]*RoundEvent) bool {
+	if len(this) != len(that) {
+		return false
+	}
+	for k, v := range this {
+		v2, ok := that[k]
+		if !ok || !v2.Equals(v) {
+			return false
+		}
+	}
+	return true
+}
+
+func (this *RoundInfo) Equals(that *RoundInfo) bool {
+	return this.Queued == that.Queued &&
+		EqualsMapStringRoundEvent(this.Events, that.Events)
+}

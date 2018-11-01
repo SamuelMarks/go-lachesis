@@ -93,7 +93,7 @@ func TestNewBadgerStore(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error retrieving DB root for participant %s: %s", participant, err)
 		}
-		if !reflect.DeepEqual(dbRoot, root) {
+		if !dbRoot.Equals(&root) {
 			t.Fatalf("%s DB root should be %#v, not %#v", participant, root, dbRoot)
 		}
 	}
@@ -188,7 +188,7 @@ func TestDBEventMethods(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if !reflect.DeepEqual(ev.Body, rev.Body) {
+			if !ev.Body.Equals(rev.Body) {
 				t.Fatalf("events[%s][%d].Body should be %#v, not %#v", p, k, ev.Body, rev.Body)
 			}
 			if !reflect.DeepEqual(ev.Signature, rev.Signature) {
@@ -217,7 +217,7 @@ func TestDBEventMethods(t *testing.T) {
 				te.Hex(),
 				dte.Hex())
 		}
-		if !reflect.DeepEqual(te.Body, dte.Body) {
+		if !te.Body.Equals(dte.Body) {
 			t.Fatalf("dbTopologicalEvents[%d].Body should be %#v, not %#v", i,
 				te.Body,
 				dte.Body)
@@ -280,7 +280,7 @@ func TestDBRoundMethods(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(*round, storedRound) {
+	if !round.Equals(&storedRound) {
 		t.Fatalf("Round and StoredRound do not match")
 	}
 
@@ -362,7 +362,7 @@ func TestDBBlockMethods(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !reflect.DeepEqual(storedBlock, block) {
+		if !storedBlock.Equals(&block) {
 			t.Fatalf("Block and StoredBlock do not match")
 		}
 	})
@@ -427,7 +427,7 @@ func TestDBFrameMethods(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !reflect.DeepEqual(storedFrame, frame) {
+		if !storedFrame.Equals(&frame) {
 			t.Fatalf("Frame and StoredFrame do not match")
 		}
 	})
@@ -470,7 +470,7 @@ func TestBadgerEvents(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if !reflect.DeepEqual(ev.Body, rev.Body) {
+			if !ev.Body.Equals(rev.Body) {
 				t.Fatalf("events[%s][%d].Body should be %#v, not %#v", p, k, ev, rev)
 			}
 			if !reflect.DeepEqual(ev.Signature, rev.Signature) {
@@ -563,7 +563,7 @@ func TestBadgerRounds(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(*round, storedRound) {
+	if !round.Equals(&storedRound) {
 		t.Fatalf("Round and StoredRound do not match")
 	}
 
@@ -619,7 +619,7 @@ func TestBadgerBlocks(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !reflect.DeepEqual(storedBlock, block) {
+		if !storedBlock.Equals(&block) {
 			t.Fatalf("Block and StoredBlock do not match")
 		}
 	})
@@ -684,8 +684,8 @@ func TestBadgerFrames(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !reflect.DeepEqual(storedFrame, frame) {
-			t.Fatalf("Frame and StoredFrame do not match")
+		if !storedFrame.Equals(&frame) {
+			t.Fatalf("Frame and StoredFrame do not match. Got %#v, expected %#v.", storedFrame.Events, frame.Events)
 		}
 	})
 }

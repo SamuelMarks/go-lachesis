@@ -22,6 +22,50 @@ func (bb *BlockBody) Hash() ([]byte, error) {
 	return crypto.SHA256(hashBytes), nil
 }
 
+func ListBytesEquals(this [][]byte, that [][]byte) bool {
+	if len(this) != len(that) {
+		return false
+	}
+	for i, v := range this {
+		if !BytesEquals(v, that[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func (this *BlockBody) Equals(that *BlockBody) bool {
+	return this.Index == that.Index &&
+		this.RoundReceived == that.RoundReceived &&
+		BytesEquals(this.StateHash, that.StateHash) &&
+		BytesEquals(this.FrameHash, that.FrameHash) &&
+		ListBytesEquals(this.Transactions, that.Transactions)
+}
+
+func (this *WireBlockSignature) Equals(that *WireBlockSignature) bool {
+	return this.Index == that.Index && this.Signature == that.Signature
+}
+
+func MapStringsEquals(this map[string]string, that map[string]string) bool {
+	if len(this) != len(that) {
+		return false
+	}
+	for k, v := range this {
+		v1, ok := that[k]
+		if !ok || v != v1 {
+			return false
+		}
+	}
+	return true
+}
+
+func (this *Block) Equals(that *Block) bool {
+	return this.Body.Equals(that.Body) &&
+		MapStringsEquals(this.Signatures, that.Signatures) &&
+		BytesEquals(this.hash, that.hash) &&
+		this.hex == that.hex
+}
+
 //------------------------------------------------------------------------------
 
 func (bs *BlockSignature) ValidatorHex() string {
