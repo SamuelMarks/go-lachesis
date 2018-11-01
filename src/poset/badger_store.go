@@ -7,6 +7,7 @@ import (
 
 	cm "github.com/andrecronje/lachesis/src/common"
 	"github.com/andrecronje/lachesis/src/peers"
+	proto "github.com/golang/protobuf/proto"
 	"github.com/dgraph-io/badger"
 )
 
@@ -357,7 +358,7 @@ func (s *BadgerStore) dbGetEvent(key string) (Event, error) {
 	}
 
 	event := new(Event)
-	if err := event.Unmarshal(eventBytes); err != nil {
+	if err := proto.Unmarshal(eventBytes, event); err != nil {
 		return Event{}, err
 	}
 
@@ -370,7 +371,7 @@ func (s *BadgerStore) dbSetEvents(events []Event) error {
 
 	for _, event := range events {
 		eventHex := event.Hex()
-		val, err := event.Marshal()
+		val, err := proto.Marshal(&event)
 		if err != nil {
 			return err
 		}
@@ -424,7 +425,7 @@ func (s *BadgerStore) dbTopologicalEvents() ([]Event, error) {
 			}
 
 			event := new(Event)
-			if err := event.Unmarshal(eventBytes); err != nil {
+			if err := proto.Unmarshal(eventBytes, event); err != nil {
 				return err
 			}
 			res = append(res, *event)
@@ -492,7 +493,7 @@ func (s *BadgerStore) dbSetRoots(roots map[string]Root) error {
 	tx := s.db.NewTransaction(true)
 	defer tx.Discard()
 	for participant, root := range roots {
-		val, err := root.Marshal()
+		val, err := proto.Marshal(&root)
 		if err != nil {
 			return err
 		}
@@ -523,7 +524,7 @@ func (s *BadgerStore) dbGetRoot(participant string) (Root, error) {
 	}
 
 	root := new(Root)
-	if err := root.Unmarshal(rootBytes); err != nil {
+	if err := proto.Unmarshal(rootBytes, root); err != nil {
 		return Root{}, err
 	}
 
@@ -547,7 +548,7 @@ func (s *BadgerStore) dbGetRound(index int) (RoundInfo, error) {
 	}
 
 	roundInfo := new(RoundInfo)
-	if err := roundInfo.Unmarshal(roundBytes); err != nil {
+	if err := proto.Unmarshal(roundBytes, roundInfo); err != nil {
 		return *NewRoundInfo(), err
 	}
 
@@ -559,7 +560,7 @@ func (s *BadgerStore) dbSetRound(index int, round RoundInfo) error {
 	defer tx.Discard()
 
 	key := roundKey(index)
-	val, err := round.Marshal()
+	val, err := proto.Marshal(&round)
 	if err != nil {
 		return err
 	}
@@ -627,7 +628,7 @@ func (s *BadgerStore) dbGetBlock(index int) (Block, error) {
 	}
 
 	block := new(Block)
-	if err := block.Unmarshal(blockBytes); err != nil {
+	if err := proto.Unmarshal(blockBytes, block); err != nil {
 		return Block{}, err
 	}
 
@@ -639,7 +640,7 @@ func (s *BadgerStore) dbSetBlock(block Block) error {
 	defer tx.Discard()
 
 	key := blockKey(int(block.Index()))
-	val, err := block.Marshal()
+	val, err := proto.Marshal(&block)
 	if err != nil {
 		return err
 	}
@@ -669,7 +670,7 @@ func (s *BadgerStore) dbGetFrame(index int) (Frame, error) {
 	}
 
 	frame := new(Frame)
-	if err := frame.Unmarshal(frameBytes); err != nil {
+	if err := proto.Unmarshal(frameBytes, frame); err != nil {
 		return Frame{}, err
 	}
 
@@ -681,7 +682,7 @@ func (s *BadgerStore) dbSetFrame(frame Frame) error {
 	defer tx.Discard()
 
 	key := frameKey(int(frame.Round))
-	val, err := frame.Marshal()
+	val, err := proto.Marshal(&frame)
 	if err != nil {
 		return err
 	}

@@ -2,8 +2,6 @@ package poset
 
 import (
 	"fmt"
-
-	"github.com/golang/protobuf/proto"
 )
 
 /*
@@ -91,21 +89,4 @@ func NewBaseRoot(creatorID int64) Root {
 		Others:     map[string]*RootEvent{},
 	}
 	return res
-}
-
-func (root *Root) Marshal() ([]byte, error) {
-	var b proto.Buffer
-	b.SetDeterministic(true)
-
-	if err := b.Marshal(root); err != nil {
-		return nil, err
-	}
-	return b.Bytes(), nil
-}
-
-func (root *Root) Unmarshal(data []byte) error {
-	b := proto.NewBuffer(data)
-	b.SetDeterministic(true)
-
-	return b.Unmarshal(root)
 }

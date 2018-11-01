@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	proto "github.com/golang/protobuf/proto"
 	"github.com/rs/xid"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -154,7 +155,7 @@ func (p *GrpcAppProxy) SubmitCh() chan []byte {
 
 // CommitBlock implements AppProxy interface method
 func (p *GrpcAppProxy) CommitBlock(block poset.Block) ([]byte, error) {
-	data, err := block.Marshal()
+	data, err := proto.Marshal(&block)
 	if err != nil {
 		return nil, err
 	}

@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	protobuf "github.com/golang/protobuf/proto"
 	"github.com/rs/xid"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -205,7 +206,7 @@ func (p *GrpcLachesisProxy) listen_events() {
 		// block commit event
 		if b := event.GetBlock(); b != nil {
 			var pb poset.Block
-			err = pb.Unmarshal(b.Data)
+			err = protobuf.Unmarshal(b.Data, &pb)
 			if err != nil {
 				continue
 			}

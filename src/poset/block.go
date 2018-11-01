@@ -14,16 +14,8 @@ import (
 //stateHash will be different
 //statehash should be ignored for validator checking
 
-func (bb *BlockBody) Marshal() ([]byte, error) {
-	return proto.Marshal(bb)
-}
-
-func (bb *BlockBody) Unmarshal(data []byte) error {
-	return proto.Unmarshal(data, bb)
-}
-
 func (bb *BlockBody) Hash() ([]byte, error) {
-	hashBytes, err := bb.Marshal()
+	hashBytes, err := proto.Marshal(bb)
 	if err != nil {
 		return nil, err
 	}
@@ -34,14 +26,6 @@ func (bb *BlockBody) Hash() ([]byte, error) {
 
 func (bs *BlockSignature) ValidatorHex() string {
 	return fmt.Sprintf("0x%X", bs.Validator)
-}
-
-func (bs *BlockSignature) Marshal() ([]byte, error) {
-	return proto.Marshal(bs)
-}
-
-func (bs *BlockSignature) Unmarshal(data []byte) error {
-	return proto.Unmarshal(data, bs)
 }
 
 func (bs *BlockSignature) ToWire() WireBlockSignature {
@@ -131,17 +115,9 @@ func (b *Block) AppendTransactions(txs [][]byte) {
 	b.Body.Transactions = append(b.Body.Transactions, txs...)
 }
 
-func (b *Block) Marshal() ([]byte, error) {
-	return proto.Marshal(b)
-}
-
-func (b *Block) Unmarshal(data []byte) error {
-	return proto.Unmarshal(data, b)
-}
-
 func (b *Block) Hash() ([]byte, error) {
 	if len(b.hash) == 0 {
-		hashBytes, err := b.Marshal()
+		hashBytes, err := proto.Marshal(b)
 		if err != nil {
 			return nil, err
 		}

@@ -3,21 +3,18 @@ package poset
 import (
 	"crypto/ecdsa"
 	"fmt"
-	"os"
-	"sort"
-	"testing"
-
-	"github.com/andrecronje/lachesis/src/peers"
-	"github.com/sirupsen/logrus"
-
-	"strings"
-
-	"reflect"
-
 	"math"
+	"os"
+	"reflect"
+	"sort"
+	"strings"
+	"testing"
 
 	"github.com/andrecronje/lachesis/src/common"
 	"github.com/andrecronje/lachesis/src/crypto"
+	"github.com/andrecronje/lachesis/src/peers"
+	proto "github.com/golang/protobuf/proto"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -1747,9 +1744,9 @@ func TestResetFromFrame(t *testing.T) {
 
 	//This operation clears the private fields which need to be recomputed
 	//in the Events (round, roundReceived,etc)
-	marshalledFrame, _ := frame.Marshal()
+	marshalledFrame, _ := proto.Marshal(&frame)
 	unmarshalledFrame := new(Frame)
-	unmarshalledFrame.Unmarshal(marshalledFrame)
+	proto.Unmarshal(marshalledFrame, unmarshalledFrame)
 
 	h2 := NewPoset(h.Participants,
 		NewInmemStore(h.Participants, cacheSize),
@@ -1886,9 +1883,9 @@ func TestResetFromFrame(t *testing.T) {
 
 		for _, ev := range events {
 
-			marshalledEv, _ := ev.Marshal()
+			marshalledEv, _ := proto.Marshal(&ev)
 			unmarshalledEv := new(Event)
-			unmarshalledEv.Unmarshal(marshalledEv)
+			proto.Unmarshal(marshalledEv, unmarshalledEv)
 
 			err = h2.InsertEvent(*unmarshalledEv, true)
 			if err != nil {
@@ -2383,9 +2380,9 @@ func TestFunkyPosetReset(t *testing.T) {
 
 		//This operation clears the private fields which need to be recomputed
 		//in the Events (round, roundReceived,etc)
-		marshalledFrame, _ := frame.Marshal()
+		marshalledFrame, _ := proto.Marshal(&frame)
 		unmarshalledFrame := new(Frame)
-		unmarshalledFrame.Unmarshal(marshalledFrame)
+		proto.Unmarshal(marshalledFrame, unmarshalledFrame)
 
 		h2 := NewPoset(h.Participants,
 			NewInmemStore(h.Participants, cacheSize),
@@ -2699,9 +2696,9 @@ func TestSparsePosetReset(t *testing.T) {
 
 		//This operation clears the private fields which need to be recomputed
 		//in the Events (round, roundReceived,etc)
-		marshalledFrame, _ := frame.Marshal()
+		marshalledFrame, _ := proto.Marshal(&frame)
 		unmarshalledFrame := new(Frame)
-		unmarshalledFrame.Unmarshal(marshalledFrame)
+		proto.Unmarshal(marshalledFrame, unmarshalledFrame)
 
 		h2 := NewPoset(h.Participants,
 			NewInmemStore(h.Participants, cacheSize),

@@ -1,9 +1,5 @@
 package poset
 
-import (
-	"github.com/golang/protobuf/proto"
-)
-
 type pendingRound struct {
 	Index   int
 	Decided bool
@@ -104,14 +100,6 @@ func (r *RoundInfo) FamousWitnesses() []string {
 func (r *RoundInfo) IsDecided(witness string) bool {
 	w, ok := r.Events[witness]
 	return ok && w.Witness && w.Famous != Trilean_UNDEFINED
-}
-
-func (r *RoundInfo) Marshal() ([]byte, error) {
-	return proto.Marshal(r)
-}
-
-func (r *RoundInfo) Unmarshal(data []byte) error {
-	return proto.Unmarshal(data, r)
 }
 
 func (r *RoundInfo) IsQueued() bool {

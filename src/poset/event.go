@@ -12,16 +12,8 @@ import (
 EventBody
 *******************************************************************************/
 
-func (e *EventBody) Marshal() ([]byte, error) {
-	return proto.Marshal(e)
-}
-
-func (e *EventBody) Unmarshal(data []byte) error {
-	return proto.Unmarshal(data, e)
-}
-
 func (e *EventBody) Hash() ([]byte, error) {
-	hashBytes, err := e.Marshal()
+	hashBytes, err := proto.Marshal(e)
 	if err != nil {
 		return nil, err
 	}
@@ -150,14 +142,6 @@ func (e *Event) Verify() (bool, error) {
 	}
 
 	return crypto.Verify(pubKey, signBytes, r, s), nil
-}
-
-func (e *Event) Marshal() ([]byte, error) {
-	return proto.Marshal(e)
-}
-
-func (e *Event) Unmarshal(data []byte) error {
-	return proto.Unmarshal(data, e)
 }
 
 func (e *Event) Creator() string {
