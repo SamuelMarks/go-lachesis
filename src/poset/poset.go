@@ -183,6 +183,11 @@ func (p *Poset) stronglySee2(x, y string) (bool, error) {
 		return false, err
 	}
 
+	// FIXIT: if ey.firstDescendants is empty the code below crashes
+	if len(ey.firstDescendants) == 0 {
+		return false, errors.New("ey.firstDescendants[] is empty")
+	}
+
 	c := 0
 	for i, entry := range ex.lastAncestors {
 		if entry.event.index >= ey.firstDescendants[i].event.index {
@@ -1435,6 +1440,10 @@ func (p *Poset) ReadWireInfo(wevent WireEvent) (*Event, error) {
 	var err error
 
 	creator := p.Participants.ById[wevent.Body.CreatorID]
+	// FIXIT: creator can be nil when wevent.Body.CreatorID == 0
+	if creator == nil {
+		return nil, fmt.Errorf("Unknown wevent.Body.CreatorID=%v", wevent.Body.CreatorID)
+	}
 	creatorBytes, err := hex.DecodeString(creator.PubKeyHex[2:])
 	if err != nil {
 		return nil, err
