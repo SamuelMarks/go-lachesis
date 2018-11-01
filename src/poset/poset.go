@@ -488,6 +488,10 @@ func (p *Poset) initEventCoordinates(event *Event) error {
 		otherParentLastAncestors := otherParent.lastAncestors
 
 		copy(event.lastAncestors[:members], selfParentLastAncestors)
+		// FIXIT: code below crashes when len(otherParentLastAncestors) == 0
+		if len(otherParentLastAncestors) == 0 {
+			return fmt.Errorf("**otherParentLastAncestors[] is empty")
+		}
 		for i := range event.lastAncestors {
 			if event.lastAncestors[i].event.index < otherParentLastAncestors[i].event.index {
 				event.lastAncestors[i].event.index = otherParentLastAncestors[i].event.index
