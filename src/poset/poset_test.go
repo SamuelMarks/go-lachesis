@@ -453,23 +453,23 @@ func TestInsertEvent(t *testing.T) {
 			t.Fatalf("Invalid wire info on e0")
 		}
 
-		expectedFirstDescendants := OrderedEventCoordinates{
+		expectedFirstDescendants := []*Index{
 			&Index{ParticipantId: int64(participants[0].ID), Event: &EventCoordinates{Hash: index["e0"], Index: 0}},
 			&Index{ParticipantId: int64(participants[1].ID), Event: &EventCoordinates{Hash: index["e10"], Index: 1}},
 			&Index{ParticipantId: int64(participants[2].ID), Event: &EventCoordinates{Hash: index["e21"], Index: 2}},
 		}
 
-		expectedLastAncestors := OrderedEventCoordinates{
+		expectedLastAncestors := []*Index{
 			&Index{ParticipantId: int64(participants[0].ID), Event: &EventCoordinates{Hash: index["e0"], Index: 0}},
 			&Index{ParticipantId: int64(participants[1].ID), Event: &EventCoordinates{Hash: "", Index: -1}},
 			&Index{ParticipantId: int64(participants[2].ID), Event: &EventCoordinates{Hash: "", Index: -1}},
 		}
 
-		if !reflect.DeepEqual(e0.FirstDescendants, expectedFirstDescendants) {
+		if !IndexListEquals(e0.FirstDescendants, expectedFirstDescendants) {
 			t.Fatal("e0 firstDescendants not good")
 		}
-		if !reflect.DeepEqual(e0.LastAncestors, expectedLastAncestors) {
-			t.Fatal("e0 lastAncestors not good")
+		if !IndexListEquals(e0.LastAncestors, expectedLastAncestors) {
+			t.Fatalf("e0 lastAncestors not good, expected %#v, got %#v", expectedLastAncestors, e0.LastAncestors)
 		}
 
 		//e21
@@ -490,13 +490,13 @@ func TestInsertEvent(t *testing.T) {
 			t.Fatalf("Invalid wire info on e21")
 		}
 
-		expectedFirstDescendants = OrderedEventCoordinates{
+		expectedFirstDescendants = []*Index{
 			&Index{ParticipantId: int64(participants[0].ID), Event: &EventCoordinates{Hash: index["e02"], Index: 2}},
 			&Index{ParticipantId: int64(participants[1].ID), Event: &EventCoordinates{Hash: index["f1"], Index: 3}},
 			&Index{ParticipantId: int64(participants[2].ID), Event: &EventCoordinates{Hash: index["e21"], Index: 2}},
 		}
 
-		expectedLastAncestors = OrderedEventCoordinates{
+		expectedLastAncestors = []*Index{
 			&Index{ParticipantId: int64(participants[0].ID), Event: &EventCoordinates{Hash: index["e0"], Index: 0}},
 			&Index{ParticipantId: int64(participants[1].ID), Event: &EventCoordinates{Hash: index["e10"], Index: 1}},
 			&Index{ParticipantId: int64(participants[2].ID), Event: &EventCoordinates{Hash: index["e21"], Index: 2}},
@@ -522,13 +522,13 @@ func TestInsertEvent(t *testing.T) {
 			t.Fatalf("Invalid wire info on f1")
 		}
 
-		expectedFirstDescendants = OrderedEventCoordinates{
+		expectedFirstDescendants = []*Index{
 			&Index{ParticipantId: int64(participants[0].ID), Event: &EventCoordinates{Hash: "", Index: math.MaxInt32}},
 			&Index{ParticipantId: int64(participants[1].ID), Event: &EventCoordinates{Hash: index["f1"], Index: 3}},
 			&Index{ParticipantId: int64(participants[2].ID), Event: &EventCoordinates{Hash: "", Index: math.MaxInt32}},
 		}
 
-		expectedLastAncestors = OrderedEventCoordinates{
+		expectedLastAncestors = []*Index{
 			&Index{ParticipantId: int64(participants[0].ID), Event: &EventCoordinates{Hash: index["e02"], Index: 2}},
 			&Index{ParticipantId: int64(participants[1].ID), Event: &EventCoordinates{Hash: index["f1"], Index: 3}},
 			&Index{ParticipantId: int64(participants[2].ID), Event: &EventCoordinates{Hash: index["e21"], Index: 2}},
@@ -1013,8 +1013,8 @@ func TestInsertEventsWithBlockSignatures(t *testing.T) {
 
 		for _, p := range plays {
 			signatures := make([]*BlockSignature, len(p.sigPayload))
-			for i, signature := range signatures {
-				signatures[i] = signature;
+			for i, signature := range p.sigPayload {
+				signatures[i] = &signature;
 			}
 			e := NewEvent(p.txPayload,
 				signatures,
@@ -1064,8 +1064,8 @@ func TestInsertEventsWithBlockSignatures(t *testing.T) {
 		p := play{2, 2, "s20", "e10", "e21", nil, []BlockSignature{unknownBlockSig}}
 
 		signatures := make([]*BlockSignature, len(p.sigPayload))
-		for i, signature := range signatures {
-			signatures[i] = signature;
+		for i, signature := range p.sigPayload {
+			signatures[i] = &signature;
 		}
 		e := NewEvent(nil,
 			signatures,
@@ -1099,8 +1099,8 @@ func TestInsertEventsWithBlockSignatures(t *testing.T) {
 		p := play{0, 2, "s00", "e21", "e02", nil, []BlockSignature{badNodeSig}}
 
 		signatures := make([]*BlockSignature, len(p.sigPayload))
-		for i, signature := range signatures {
-			signatures[i] = signature;
+		for i, signature := range p.sigPayload {
+			signatures[i] = &signature;
 		}
 		e := NewEvent(nil,
 			signatures,

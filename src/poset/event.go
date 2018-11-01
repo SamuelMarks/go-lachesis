@@ -105,9 +105,7 @@ func (e *EventBody) Hash() ([]byte, error) {
 Event
 *******************************************************************************/
 
-type OrderedEventCoordinates []*Index
-
-func GetIDIndex(o OrderedEventCoordinates, id int64) int {
+func GetIDIndex(o []*Index, id int64) int {
 	for i, idx := range o {
 		if idx.ParticipantId == id {
 			return i
@@ -117,7 +115,7 @@ func GetIDIndex(o OrderedEventCoordinates, id int64) int {
 	return -1
 }
 
-func GetByID(o OrderedEventCoordinates, id int64) (Index, bool) {
+func GetByID(o []*Index, id int64) (Index, bool) {
 	for _, idx := range o {
 		if idx.ParticipantId == id {
 			return *idx, true
@@ -125,13 +123,6 @@ func GetByID(o OrderedEventCoordinates, id int64) (Index, bool) {
 	}
 
 	return Index{}, false
-}
-
-func (o *OrderedEventCoordinates) Add(id int64, event EventCoordinates) {
-	*o = append(*o, &Index{
-		ParticipantId: id,
-		Event:         &event,
-	})
 }
 
 // -----

@@ -453,7 +453,7 @@ func (p *Poset) checkOtherParent(event Event) error {
 func (p *Poset) initEventCoordinates(event *Event) error {
 	members := p.Participants.Len()
 
-	event.FirstDescendants = make(OrderedEventCoordinates, members)
+	event.FirstDescendants = make([]*Index, members)
 	for i, id := range p.Participants.ToIDSlice() {
 		event.FirstDescendants[i] = &Index{
 			ParticipantId: int64(id),
@@ -463,7 +463,7 @@ func (p *Poset) initEventCoordinates(event *Event) error {
 		}
 	}
 
-	event.LastAncestors = make(OrderedEventCoordinates, members)
+	event.LastAncestors = make([]*Index, members)
 
 	selfParent, selfParentError := p.Store.GetEvent(event.SelfParent())
 	otherParent, otherParentError := p.Store.GetEvent(event.OtherParent())
