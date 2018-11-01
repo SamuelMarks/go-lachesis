@@ -671,7 +671,7 @@ func (n *Node) GetStats() map[string]string {
 		"heartbeat":               strconv.FormatFloat(n.conf.HeartbeatTimeout.Seconds(), 'f', 2, 64),
 		"node_current":            strconv.FormatInt(time.Now().Unix(), 10),
 		"node_start":              strconv.FormatInt(n.start.Unix(), 10),
-		"last_block_index":        strconv.Itoa(n.core.GetLastBlockIndex()),
+		"last_block_index":        strconv.FormatInt(n.core.GetLastBlockIndex(), 10),
 		"consensus_events":        strconv.Itoa(consensusEvents),
 		"sync_limit":              strconv.Itoa(n.conf.SyncLimit),
 		"consensus_transactions":  strconv.FormatUint(consensusTransactions, 10),
@@ -767,7 +767,7 @@ func (n *Node) GetRoot(rootIndex string) (poset.Root, error) {
 	return n.core.poset.Store.GetRoot(rootIndex)
 }
 
-func (n *Node) GetBlock(blockIndex int) (poset.Block, error) {
+func (n *Node) GetBlock(blockIndex int64) (poset.Block, error) {
 	return n.core.poset.Store.GetBlock(blockIndex)
 }
 

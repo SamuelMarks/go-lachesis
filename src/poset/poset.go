@@ -1278,7 +1278,7 @@ func (p *Poset) ProcessSigPool() error {
 		//only check if bs is greater than AnchorBlock, otherwise simply remove
 		if p.AnchorBlock == nil ||
 			bs.Index > int64(*p.AnchorBlock) {
-			block, err := p.Store.GetBlock(int(bs.Index))
+			block, err := p.Store.GetBlock(bs.Index)
 			if err != nil {
 				p.logger.WithFields(logrus.Fields{
 					"index": bs.Index,
@@ -1338,7 +1338,7 @@ func (p *Poset) GetAnchorBlockWithFrame() (Block, Frame, error) {
 		return Block{}, Frame{}, fmt.Errorf("No Anchor Block")
 	}
 
-	block, err := p.Store.GetBlock(*p.AnchorBlock)
+	block, err := p.Store.GetBlock(int64(*p.AnchorBlock))
 	if err != nil {
 		return Block{}, Frame{}, err
 	}

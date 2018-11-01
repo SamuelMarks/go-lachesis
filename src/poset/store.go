@@ -26,9 +26,9 @@ type Store interface {
 	RoundWitnesses(int) []string
 	RoundEvents(int) int
 	GetRoot(string) (Root, error)
-	GetBlock(int) (Block, error)
+	GetBlock(int64) (Block, error)
 	SetBlock(Block) error
-	LastBlockIndex() int
+	LastBlockIndex() int64
 	GetFrame(int) (Frame, error)
 	SetFrame(Frame) error
 	Reset(map[string]Root) error

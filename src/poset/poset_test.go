@@ -2215,13 +2215,13 @@ func TestFunkyPosetBlocks(t *testing.T) {
 		}
 	}
 
-	expectedBlockTxCounts := map[int]int{
+	expectedBlockTxCounts := map[int64]int{
 		0: 6,
 		1: 7,
 		2: 7,
 	}
 
-	for bi := 0; bi < 3; bi++ {
+	for bi := int64(0); bi < 3; bi++ {
 		b, err := h.Store.GetBlock(bi)
 		if err != nil {
 			t.Fatal(err)
@@ -2255,7 +2255,7 @@ func TestFunkyPosetFrames(t *testing.T) {
 	}
 
 	t.Logf("------------------------------------------------------------------")
-	for bi := 0; bi < 3; bi++ {
+	for bi := int64(0); bi < 3; bi++ {
 		block, err := h.Store.GetBlock(bi)
 		if err != nil {
 			t.Fatal(err)
@@ -2336,7 +2336,7 @@ func TestFunkyPosetFrames(t *testing.T) {
 		},
 	}
 
-	for bi := 0; bi < 3; bi++ {
+	for bi := int64(0); bi < 3; bi++ {
 		block, err := h.Store.GetBlock(bi)
 		if err != nil {
 			t.Fatal(err)
@@ -2363,7 +2363,7 @@ func TestFunkyPosetReset(t *testing.T) {
 	h.DecideRoundReceived()
 	h.ProcessDecidedRounds()
 
-	for bi := 0; bi < 3; bi++ {
+	for bi := int64(0); bi < 3; bi++ {
 		t.Logf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 		t.Logf("RESETTING FROM BLOCK %d", bi)
 		t.Logf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
@@ -2425,7 +2425,7 @@ func TestFunkyPosetReset(t *testing.T) {
 		h2.ProcessDecidedRounds()
 		t.Logf("**************************************************************")
 
-		compareRoundWitnesses(h, h2, index, bi, true, t)
+		compareRoundWitnesses(h, h2, index, int(bi), true, t)
 	}
 
 }
@@ -2565,7 +2565,7 @@ func TestSparsePosetFrames(t *testing.T) {
 	}
 
 	t.Logf("------------------------------------------------------------------")
-	for bi := 0; bi < 3; bi++ {
+	for bi := int64(0); bi < 3; bi++ {
 		block, err := h.Store.GetBlock(bi)
 		if err != nil {
 			t.Fatal(err)
@@ -2652,7 +2652,7 @@ func TestSparsePosetFrames(t *testing.T) {
 		},
 	}
 
-	for bi := 0; bi < 3; bi++ {
+	for bi := int64(0); bi < 3; bi++ {
 		block, err := h.Store.GetBlock(bi)
 		if err != nil {
 			t.Fatal(err)
@@ -2679,7 +2679,7 @@ func TestSparsePosetReset(t *testing.T) {
 	h.DecideRoundReceived()
 	h.ProcessDecidedRounds()
 
-	for bi := 0; bi < 3; bi++ {
+	for bi := int64(0); bi < 3; bi++ {
 		t.Logf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 		t.Logf("RESETTING FROM BLOCK %d", bi)
 		t.Logf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
@@ -2748,7 +2748,7 @@ func TestSparsePosetReset(t *testing.T) {
 		h2.ProcessDecidedRounds()
 		t.Logf("**************************************************************")
 
-		compareRoundWitnesses(h, h2, index, bi, true, t)
+		compareRoundWitnesses(h, h2, index, int(bi), true, t)
 	}
 
 }

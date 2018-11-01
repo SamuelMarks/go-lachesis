@@ -171,7 +171,7 @@ func TestInmemRounds(t *testing.T) {
 func TestInmemBlocks(t *testing.T) {
 	store, participants := initInmemStore(10)
 
-	index := 0
+	index := int64(0)
 	roundReceived := 7
 	transactions := [][]byte{
 		[]byte("tx1"),
@@ -181,7 +181,7 @@ func TestInmemBlocks(t *testing.T) {
 		[]byte("tx5"),
 	}
 	frameHash := []byte("this is the frame hash")
-	block := NewBlock(int64(index), int64(roundReceived), frameHash, transactions)
+	block := NewBlock(index, int64(roundReceived), frameHash, transactions)
 
 	sig1, err := block.Sign(participants[0].privKey)
 	if err != nil {

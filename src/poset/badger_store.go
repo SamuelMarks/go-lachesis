@@ -140,7 +140,7 @@ func roundKey(index int) []byte {
 	return []byte(fmt.Sprintf("%s_%09d", roundPrefix, index))
 }
 
-func blockKey(index int) []byte {
+func blockKey(index int64) []byte {
 	return []byte(fmt.Sprintf("%s_%09d", blockPrefix, index))
 }
 
@@ -286,7 +286,7 @@ func (s *BadgerStore) GetRoot(participant string) (Root, error) {
 	return root, mapError(err, "Root", string(participantRootKey(participant)))
 }
 
-func (s *BadgerStore) GetBlock(rr int) (Block, error) {
+func (s *BadgerStore) GetBlock(rr int64) (Block, error) {
 	res, err := s.inmemStore.GetBlock(rr)
 	if err != nil {
 		res, err = s.dbGetBlock(rr)
@@ -301,7 +301,7 @@ func (s *BadgerStore) SetBlock(block Block) error {
 	return s.dbSetBlock(block)
 }
 
-func (s *BadgerStore) LastBlockIndex() int {
+func (s *BadgerStore) LastBlockIndex() int64 {
 	return s.inmemStore.LastBlockIndex()
 }
 
@@ -611,7 +611,7 @@ func (s *BadgerStore) dbSetParticipants(participants *peers.Peers) error {
 	return tx.Commit(nil)
 }
 
-func (s *BadgerStore) dbGetBlock(index int) (Block, error) {
+func (s *BadgerStore) dbGetBlock(index int64) (Block, error) {
 	var blockBytes []byte
 	key := blockKey(index)
 	err := s.db.View(func(txn *badger.Txn) error {
@@ -639,7 +639,7 @@ func (s *BadgerStore) dbSetBlock(block Block) error {
 	tx := s.db.NewTransaction(true)
 	defer tx.Discard()
 
-	key := blockKey(int(block.Index()))
+	key := blockKey(block.Index())
 	val, err := proto.Marshal(&block)
 	if err != nil {
 		return err

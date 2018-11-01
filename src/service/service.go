@@ -217,7 +217,7 @@ func (s *Service) GetBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	block, err := s.node.GetBlock(blockIndex)
+	block, err := s.node.GetBlock(int64(blockIndex))
 	if err != nil {
 		s.logger.WithError(err).Errorf("Retrieving block %d", blockIndex)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

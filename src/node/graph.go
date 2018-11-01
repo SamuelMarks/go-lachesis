@@ -18,7 +18,7 @@ type Graph struct {
 
 func (g *Graph) GetBlocks() []poset.Block {
 	res := []poset.Block{}
- 	blockIdx := 0
+ 	blockIdx := int64(0)
 	store := g.Node.core.poset.Store
 
  	for blockIdx <= store.LastBlockIndex() {

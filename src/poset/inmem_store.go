@@ -1,7 +1,6 @@
 package poset
 
 import (
-	_ "fmt"
 	"strconv"
 
 	cm "github.com/andrecronje/lachesis/src/common"
@@ -22,7 +21,7 @@ type InmemStore struct {
 	rootsBySelfParent      map[string]Root //[Root.SelfParent.Hash] => Root
 	lastRound              int
 	lastConsensusEvents    map[string]string //[participant] => hex() of last consensus event
-	lastBlock              int
+	lastBlock              int64
 }
 
 func NewInmemStore(participants *peers.Peers, cacheSize int) *InmemStore {
@@ -88,7 +87,6 @@ func (s *InmemStore) SetEvent(event Event) error {
 		}
 	}
 
-	// fmt.Println("Adding event to cache", event.Hex())
 	s.eventCache.Add(key, event)
 
 	return nil
@@ -228,28 +226,28 @@ func (s *InmemStore) GetRoot(participant string) (Root, error) {
 	return res, nil
 }
 
-func (s *InmemStore) GetBlock(index int) (Block, error) {
+func (s *InmemStore) GetBlock(index int64) (Block, error) {
 	res, ok := s.blockCache.Get(index)
 	if !ok {
-		return Block{}, cm.NewStoreErr("BlockCache", cm.KeyNotFound, strconv.Itoa(index))
+		return Block{}, cm.NewStoreErr("BlockCache", cm.KeyNotFound, strconv.FormatInt(index, 10))
 	}
 	return res.(Block), nil
 }
 
 func (s *InmemStore) SetBlock(block Block) error {
 	index := block.Index()
-	_, err := s.GetBlock(int(index))
+	_, err := s.GetBlock(index)
 	if err != nil && !cm.Is(err, cm.KeyNotFound) {
 		return err
 	}
 	s.blockCache.Add(index, block)
-	if index > int64(s.lastBlock) {
-		s.lastBlock = int(index)
+	if index > s.lastBlock {
+		s.lastBlock = index
 	}
 	return nil
 }
 
-func (s *InmemStore) LastBlockIndex() int {
+func (s *InmemStore) LastBlockIndex() int64 {
 	return s.lastBlock
 }
 

@@ -2,7 +2,9 @@ package common
 
 //TAKEN FROM HASHICORP LRU
 
-import "container/list"
+import (
+	"container/list"
+)
 
 // EvictCallback is used to get a callback when a cache entry is evicted
 type EvictCallback func(key interface{}, value interface{})

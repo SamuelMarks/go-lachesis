@@ -563,6 +563,6 @@ func (c *Core) GetLastCommittedRoundEventsCount() int {
 	return c.poset.LastCommitedRoundEvents
 }
 
-func (c *Core) GetLastBlockIndex() int {
+func (c *Core) GetLastBlockIndex() int64 {
 	return c.poset.Store.LastBlockIndex()
 }

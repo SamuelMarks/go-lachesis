@@ -326,7 +326,7 @@ func TestDBBlockMethods(t *testing.T) {
 	store, participants := initBadgerStore(cacheSize, t)
 	defer removeBadgerStore(store, t)
 
-	index := 0
+	index := int64(0)
 	roundReceived := 5
 	transactions := [][]byte{
 		[]byte("tx1"),
@@ -337,7 +337,7 @@ func TestDBBlockMethods(t *testing.T) {
 	}
 	frameHash := []byte("this is the frame hash")
 
-	block := NewBlock(int64(index), int64(roundReceived), frameHash, transactions)
+	block := NewBlock(index, int64(roundReceived), frameHash, transactions)
 
 	sig1, err := block.Sign(participants[0].privKey)
 	if err != nil {
@@ -584,7 +584,7 @@ func TestBadgerBlocks(t *testing.T) {
 	store, participants := initBadgerStore(cacheSize, t)
 	defer removeBadgerStore(store, t)
 
-	index := 0
+	index := int64(0)
 	roundReceived := 5
 	transactions := [][]byte{
 		[]byte("tx1"),
@@ -594,7 +594,7 @@ func TestBadgerBlocks(t *testing.T) {
 		[]byte("tx5"),
 	}
 	frameHash := []byte("this is the frame hash")
-	block := NewBlock(int64(index), int64(roundReceived), frameHash, transactions)
+	block := NewBlock(index, int64(roundReceived), frameHash, transactions)
 
 	sig1, err := block.Sign(participants[0].privKey)
 	if err != nil {
