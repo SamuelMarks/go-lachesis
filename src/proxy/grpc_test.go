@@ -209,7 +209,7 @@ func TestGrpcMaxMsgSize(t *testing.T) {
 	t.Run("#2 Receive large block", func(t *testing.T) {
 		assert := assert.New(t)
 		block := poset.Block{
-			Body: poset.BlockBody{
+			Body: &poset.BlockBody{
 				Transactions: [][]byte{
 					largeData,
 				},
