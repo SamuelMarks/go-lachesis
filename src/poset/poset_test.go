@@ -105,7 +105,8 @@ func playEvents(plays []play, nodes []TestNode, index map[string]string, ordered
 	for _, p := range plays {
 		signatures := make([]*BlockSignature, len(p.sigPayload))
 		for i, signature := range p.sigPayload {
-			signatures[i] = &signature;
+			signatures[i] = new(BlockSignature)
+			*signatures[i] = signature
 		}
 		e := NewEvent(p.txPayload,
 			signatures,
@@ -1013,7 +1014,8 @@ func TestInsertEventsWithBlockSignatures(t *testing.T) {
 		for _, p := range plays {
 			signatures := make([]*BlockSignature, len(p.sigPayload))
 			for i, signature := range p.sigPayload {
-				signatures[i] = &signature;
+				signatures[i] = new(BlockSignature)
+				*signatures[i] = signature
 			}
 			e := NewEvent(p.txPayload,
 				signatures,
@@ -1064,7 +1066,8 @@ func TestInsertEventsWithBlockSignatures(t *testing.T) {
 
 		signatures := make([]*BlockSignature, len(p.sigPayload))
 		for i, signature := range p.sigPayload {
-			signatures[i] = &signature;
+			signatures[i] = new(BlockSignature)
+			*signatures[i] = signature
 		}
 		e := NewEvent(nil,
 			signatures,
@@ -1099,7 +1102,8 @@ func TestInsertEventsWithBlockSignatures(t *testing.T) {
 
 		signatures := make([]*BlockSignature, len(p.sigPayload))
 		for i, signature := range p.sigPayload {
-			signatures[i] = &signature;
+			signatures[i] = new(BlockSignature)
+			*signatures[i] = signature
 		}
 		e := NewEvent(nil,
 			signatures,
@@ -1615,7 +1619,8 @@ func TestGetFrame(t *testing.T) {
 		sort.Sort(ByLamportTimestamp(expectedEvents))
 		expectedEventsPointers := make([]*Event, len(expectedEvents))
 		for i, e := range expectedEvents {
-			expectedEventsPointers[i] = &e
+			expectedEventsPointers[i] = new(Event)
+			*expectedEventsPointers[i] = e
 		}
 		if !EventListEquals(expectedEventsPointers, frame.Events) {
 			t.Fatal("Frame.Events is not good")
@@ -1694,7 +1699,7 @@ func TestGetFrame(t *testing.T) {
 				t.Fatalf("Roots[%d].SelfParent should be %v, not %v", p, er.SelfParent, x)
 			}
 
-			if others := r.Others; !reflect.DeepEqual(others, er.Others) {
+			if others := r.Others; !EqualsMapStringRootEvent(others, er.Others) {
 				t.Fatalf("Roots[%d].Others should be %v, not %v", p, er.Others, others)
 			}
 		}
@@ -1718,7 +1723,12 @@ func TestGetFrame(t *testing.T) {
 			expectedEvents = append(expectedEvents, e)
 		}
 		sort.Sort(ByLamportTimestamp(expectedEvents))
-		if !reflect.DeepEqual(expectedEvents, frame.Events) {
+		var expectedEventsPointers = make([]*Event, len(expectedEvents))
+		for i, e := range expectedEvents {
+			expectedEventsPointers[i] = new(Event)
+			*expectedEventsPointers[i] = e
+		}
+		if !EventListEquals(expectedEventsPointers, frame.Events) {
 			t.Fatal("Frame.Events is not good")
 		}
 	})
@@ -2532,7 +2542,8 @@ func initSparsePoset(logger *logrus.Logger) (*Poset, map[string]string) {
 	for _, p := range plays {
 		signatures := make([]*BlockSignature, len(p.sigPayload))
 		for i, signature := range p.sigPayload {
-			signatures[i] = &signature;
+			signatures[i] = new(BlockSignature)
+			*signatures[i] = signature
 		}
 		e := NewEvent(p.txPayload,
 			signatures,
