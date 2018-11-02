@@ -645,13 +645,6 @@ func (n *Node) Shutdown() {
 }
 
 func (n *Node) GetStats() map[string]string {
-	toString := func(i *int) string {
-		if i == nil {
-			return "nil"
-		}
-		return strconv.Itoa(*i)
-	}
-
 	timeElapsed := time.Since(n.start)
 
 	consensusEvents := n.core.GetConsensusEventsCount()
@@ -661,12 +654,12 @@ func (n *Node) GetStats() map[string]string {
 
 	lastConsensusRound := n.core.GetLastConsensusRoundIndex()
 	var consensusRoundsPerSecond float64
-	if lastConsensusRound != nil {
-		consensusRoundsPerSecond = float64(*lastConsensusRound) / timeElapsed.Seconds()
+	if lastConsensusRound != -1 {
+		consensusRoundsPerSecond = float64(lastConsensusRound) / timeElapsed.Seconds()
 	}
 
 	s := map[string]string{
-		"last_consensus_round":    toString(lastConsensusRound),
+		"last_consensus_round":    strconv.FormatInt(lastConsensusRound, 10),
 		"time_elapsed":            strconv.FormatFloat(timeElapsed.Seconds(), 'f', 2, 64),
 		"heartbeat":               strconv.FormatFloat(n.conf.HeartbeatTimeout.Seconds(), 'f', 2, 64),
 		"node_current":            strconv.FormatInt(time.Now().Unix(), 10),
@@ -747,19 +740,19 @@ func (n *Node) GetConsensusTransactionsCount() uint64 {
 	return n.core.GetConsensusTransactionsCount()
 }
 
-func (n *Node) GetRound(roundIndex int) (poset.RoundInfo, error) {
+func (n *Node) GetRound(roundIndex int64) (poset.RoundInfo, error) {
 	return n.core.poset.Store.GetRound(roundIndex)
 }
 
-func (n *Node) GetLastRound() int {
+func (n *Node) GetLastRound() int64 {
 	return n.core.poset.Store.LastRound()
 }
 
-func (n *Node) GetRoundWitnesses(roundIndex int) []string {
+func (n *Node) GetRoundWitnesses(roundIndex int64) []string {
 	return n.core.poset.Store.RoundWitnesses(roundIndex)
 }
 
-func (n *Node) GetRoundEvents(roundIndex int) int {
+func (n *Node) GetRoundEvents(roundIndex int64) int {
 	return n.core.poset.Store.RoundEvents(roundIndex)
 }
 

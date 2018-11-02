@@ -147,7 +147,7 @@ func (s *Service) GetRound(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	round, err := s.node.GetRound(roundIndex)
+	round, err := s.node.GetRound(int64(roundIndex))
 	if err != nil {
 		s.logger.WithError(err).Errorf("Retrieving round %d", roundIndex)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -174,7 +174,7 @@ func (s *Service) GetRoundWitnesses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	roundWitnesses := s.node.GetRoundWitnesses(roundWitnessesIndex)
+	roundWitnesses := s.node.GetRoundWitnesses(int64(roundWitnessesIndex))
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(roundWitnesses)
@@ -189,7 +189,7 @@ func (s *Service) GetRoundEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	roundEvent := s.node.GetRoundEvents(roundEventsIndex)
+	roundEvent := s.node.GetRoundEvents(int64(roundEventsIndex))
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(roundEvent)

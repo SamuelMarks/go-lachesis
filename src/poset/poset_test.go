@@ -59,7 +59,7 @@ type ancestryItem struct {
 
 type roundItem struct {
 	event string
-	round int
+	round int64
 }
 
 type play struct {
@@ -308,7 +308,7 @@ func TestSee(t *testing.T) {
 func TestLamportTimestamp(t *testing.T) {
 	h, index := initPoset(t)
 
-	expectedTimestamps := map[string]int{
+	expectedTimestamps := map[string]int64{
 		"e0":  0,
 		"e1":  0,
 		"e2":  0,
@@ -1227,7 +1227,7 @@ func TestDivideRoundsBis(t *testing.T) {
 
 	//[event] => {lamportTimestamp, round}
 	type tr struct {
-		t, r int
+		t, r int64
 	}
 	expectedTimestamps := map[string]tr{
 		"e0":   {0, 0},
@@ -1268,10 +1268,10 @@ func TestDivideRoundsBis(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if r := ev.Round; r != int64(et.r) {
+		if r := ev.Round; r != et.r {
 			t.Fatalf("%s round should be %d, not %d", e, et.r, r)
 		}
-		if ts := ev.LamportTimestamp; ts != int64(et.t) {
+		if ts := ev.LamportTimestamp; ts != et.t {
 			t.Fatalf("%s lamportTimestamp should be %d, not %d", e, et.t, ts)
 		}
 	}
@@ -1304,6 +1304,10 @@ func TestDecideFame(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	for k, v := range round1.Events {
+		fmt.Printf("%s %#v\n", k, v)
+	}
+	fmt.Printf("GETTING %s\n", index["f0"])
 	if f := round1.Events[index["f0"]]; !(f.Witness && f.Famous == Trilean_TRUE) {
 		t.Fatalf("f0 should be famous; got %v", f)
 	}
@@ -1476,7 +1480,7 @@ func TestProcessDecidedRounds(t *testing.T) {
 		t.Fatalf("Block0.Transactions[0] should be 'e21', not %s", tx)
 	}
 
-	frame1, err := h.GetFrame(int(block0.RoundReceived()))
+	frame1, err := h.GetFrame(block0.RoundReceived())
 	frame1Hash, err := frame1.Hash()
 	if !reflect.DeepEqual(block0.FrameHash(), frame1Hash) {
 		t.Fatalf("Block0.FrameHash should be %v, not %v", frame1Hash, block0.FrameHash())
@@ -1503,7 +1507,7 @@ func TestProcessDecidedRounds(t *testing.T) {
 		t.Fatalf("Block1.Transactions[1] should be 'f02b', not %s", tx)
 	}
 
-	frame2, err := h.GetFrame(int(block1.RoundReceived()))
+	frame2, err := h.GetFrame(block1.RoundReceived())
 	frame2Hash, err := frame2.Hash()
 	if !reflect.DeepEqual(block1.FrameHash(), frame2Hash) {
 		t.Fatalf("Block1.FrameHash should be %v, not %v", frame2Hash, block1.FrameHash())
@@ -1527,8 +1531,8 @@ func TestProcessDecidedRounds(t *testing.T) {
 	}
 
 	//Anchor -------------------------------------------------------------------
-	if v := h.AnchorBlock; v != nil {
-		t.Fatalf("AnchorBlock should be nil, not %v", v)
+	if v := h.AnchorBlock; v != -1 {
+		t.Fatalf("AnchorBlock should be -1, not %d", v)
 	}
 
 }
@@ -1737,7 +1741,7 @@ func TestResetFromFrame(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	frame, err := h.GetFrame(int(block.RoundReceived()))
+	frame, err := h.GetFrame(block.RoundReceived())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1851,19 +1855,19 @@ func TestResetFromFrame(t *testing.T) {
 		t.Fatalf("LastBlockIndex should be %d, not %d", block.Index(), lbi)
 	}
 
-	if r := h2.LastConsensusRound; r == nil || int64(*r) != block.RoundReceived() {
-		t.Fatalf("LastConsensusRound should be %d, not %d", block.RoundReceived(), *r)
+	if r := h2.LastConsensusRound; r == -1 || r != block.RoundReceived() {
+		t.Fatalf("LastConsensusRound should be %d, not %d", block.RoundReceived(), r)
 	}
 
-	if v := h2.AnchorBlock; v != nil {
-		t.Fatalf("AnchorBlock should be nil, not %v", v)
+	if v := h2.AnchorBlock; v != -1 {
+		t.Fatalf("AnchorBlock should be -1, not %v", v)
 	}
 
 	/***************************************************************************
 	Test continue after Reset
 	***************************************************************************/
 	//Insert remaining Events into the Reset poset
-	for r := 2; r <= 4; r++ {
+	for r := int64(2); r <= 4; r++ {
 		round, err := h.Store.GetRound(r)
 		if err != nil {
 			t.Fatal(err)
@@ -1899,7 +1903,7 @@ func TestResetFromFrame(t *testing.T) {
 	h2.DecideRoundReceived()
 	h2.ProcessDecidedRounds()
 
-	for r := 1; r <= 4; r++ {
+	for r := int64(1); r <= 4; r++ {
 		hRound, err := h.Store.GetRound(r)
 		if err != nil {
 			t.Fatal(err)
@@ -1959,9 +1963,9 @@ func TestBootstrap(t *testing.T) {
 			hKnown, nhKnown)
 	}
 
-	if *h.LastConsensusRound != *nh.LastConsensusRound {
+	if h.LastConsensusRound != nh.LastConsensusRound {
 		t.Fatalf("Bootstrapped poset's LastConsensusRound should be %#v, not %#v",
-			*h.LastConsensusRound, *nh.LastConsensusRound)
+			h.LastConsensusRound, nh.LastConsensusRound)
 	}
 
 	if h.LastCommitedRoundEvents != nh.LastCommitedRoundEvents {
@@ -2106,7 +2110,7 @@ func TestFunkyPosetFame(t *testing.T) {
 		t.Fatalf("last round should be 4 not %d", l)
 	}
 
-	for r := 0; r < 5; r++ {
+	for r := int64(0); r < 5; r++ {
 		round, err := h.Store.GetRound(r)
 		if err != nil {
 			t.Fatal(err)
@@ -2186,7 +2190,7 @@ func TestFunkyPosetBlocks(t *testing.T) {
 		t.Fatalf("last round should be 5 not %d", l)
 	}
 
-	for r := 0; r < 6; r++ {
+	for r := int64(0); r < 6; r++ {
 		round, err := h.Store.GetRound(r)
 		if err != nil {
 			t.Fatal(err)
@@ -2261,7 +2265,7 @@ func TestFunkyPosetFrames(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		frame, err := h.GetFrame(int(block.RoundReceived()))
+		frame, err := h.GetFrame(block.RoundReceived())
 		for k, ev := range frame.Events {
 			r, _ := h.round(ev.Hex())
 			t.Logf("frame[%d].Events[%d]: %s, round %d", frame.Round, k, getName(index, ev.Hex()), r)
@@ -2342,7 +2346,7 @@ func TestFunkyPosetFrames(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		frame, err := h.GetFrame(int(block.RoundReceived()))
+		frame, err := h.GetFrame(block.RoundReceived())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -2373,7 +2377,7 @@ func TestFunkyPosetReset(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		frame, err := h.GetFrame(int(block.RoundReceived()))
+		frame, err := h.GetFrame(block.RoundReceived())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -2425,7 +2429,7 @@ func TestFunkyPosetReset(t *testing.T) {
 		h2.ProcessDecidedRounds()
 		t.Logf("**************************************************************")
 
-		compareRoundWitnesses(h, h2, index, int(bi), true, t)
+		compareRoundWitnesses(h, h2, index, bi, true, t)
 	}
 
 }
@@ -2571,7 +2575,7 @@ func TestSparsePosetFrames(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		frame, err := h.GetFrame(int(block.RoundReceived()))
+		frame, err := h.GetFrame(block.RoundReceived())
 		for k, ev := range frame.Events {
 			r, _ := h.round(ev.Hex())
 			t.Logf("frame[%d].Events[%d]: %s, round %d", frame.Round, k, getName(index, ev.Hex()), r)
@@ -2658,7 +2662,7 @@ func TestSparsePosetFrames(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		frame, err := h.GetFrame(int(block.RoundReceived()))
+		frame, err := h.GetFrame(block.RoundReceived())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -2689,7 +2693,7 @@ func TestSparsePosetReset(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		frame, err := h.GetFrame(int(block.RoundReceived()))
+		frame, err := h.GetFrame(block.RoundReceived())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -2748,14 +2752,14 @@ func TestSparsePosetReset(t *testing.T) {
 		h2.ProcessDecidedRounds()
 		t.Logf("**************************************************************")
 
-		compareRoundWitnesses(h, h2, index, int(bi), true, t)
+		compareRoundWitnesses(h, h2, index, bi, true, t)
 	}
 
 }
 
 /*----------------------------------------------------------------------------*/
 
-func compareRoundWitnesses(h, h2 *Poset, index map[string]string, round int, check bool, t *testing.T) {
+func compareRoundWitnesses(h, h2 *Poset, index map[string]string, round int64, check bool, t *testing.T) {
 
 	for i := round; i <= 5; i++ {
 		hRound, err := h.Store.GetRound(i)

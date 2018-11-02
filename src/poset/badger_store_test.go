@@ -422,7 +422,7 @@ func TestDBFrameMethods(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		storedFrame, err := store.dbGetFrame(int(frame.Round))
+		storedFrame, err := store.dbGetFrame(frame.Round)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -679,7 +679,7 @@ func TestBadgerFrames(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		storedFrame, err := store.GetFrame(int(frame.Round))
+		storedFrame, err := store.GetFrame(frame.Round)
 		if err != nil {
 			t.Fatal(err)
 		}

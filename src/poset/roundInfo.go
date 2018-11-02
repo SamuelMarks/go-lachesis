@@ -1,7 +1,7 @@
 package poset
 
 type pendingRound struct {
-	Index   int
+	Index   int64
 	Decided bool
 }
 

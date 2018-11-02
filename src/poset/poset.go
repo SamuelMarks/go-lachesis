@@ -22,15 +22,15 @@ type Poset struct {
 	Store                   Store            //store of Events, Rounds, and Blocks
 	UndeterminedEvents      []string         //[index] => hash . FIFO queue of Events whose consensus order is not yet determined
 	PendingRounds           []*pendingRound  //FIFO queue of Rounds which have not attained consensus yet
-	LastConsensusRound      *int             //index of last consensus round
-	FirstConsensusRound     *int             //index of first consensus round (only used in tests)
-	AnchorBlock             *int             //index of last block with enough signatures
+	LastConsensusRound      int64            //index of last consensus round
+	FirstConsensusRound     int64            //index of first consensus round (only used in tests)
+	AnchorBlock             int64            //index of last block with enough signatures
 	LastCommitedRoundEvents int              //number of events in round before LastConsensusRound
 	SigPool                 []BlockSignature //Pool of Block signatures that need to be processed
 	ConsensusTransactions   uint64           //number of consensus transactions
 	PendingLoadedEvents     int              //number of loaded events that are not yet committed
 	commitCh                chan Block       //channel for committing Blocks
-	topologicalIndex        int              //counter used to order events in topological order (only local)
+	topologicalIndex        int64            //counter used to order events in topological order (only local)
 	superMajority           int
 	trustCount              int
 
@@ -58,17 +58,20 @@ func NewPoset(participants *peers.Peers, store Store, commitCh chan Block, logge
 
 	cacheSize := store.CacheSize()
 	poset := Poset{
-		Participants:      participants,
-		Store:             store,
-		commitCh:          commitCh,
-		ancestorCache:     common.NewLRU(cacheSize, nil),
-		selfAncestorCache: common.NewLRU(cacheSize, nil),
-		stronglySeeCache:  common.NewLRU(cacheSize, nil),
-		roundCache:        common.NewLRU(cacheSize, nil),
-		timestampCache:    common.NewLRU(cacheSize, nil),
-		logger:            logger,
-		superMajority:     superMajority,
-		trustCount:        trustCount,
+		Participants:      	participants,
+		Store:             	store,
+		commitCh:          	commitCh,
+		ancestorCache:     	common.NewLRU(cacheSize, nil),
+		selfAncestorCache: 	common.NewLRU(cacheSize, nil),
+		stronglySeeCache:  	common.NewLRU(cacheSize, nil),
+		roundCache:        	common.NewLRU(cacheSize, nil),
+		timestampCache:   	common.NewLRU(cacheSize, nil),
+		logger:            	logger,
+		superMajority:     	superMajority,
+		trustCount:        	trustCount,
+		LastConsensusRound:	-1,
+		FirstConsensusRound:	-1,
+		AnchorBlock:		-1,
 	}
 
 	return &poset
@@ -197,9 +200,9 @@ func (p *Poset) stronglySee2(x, y string) (bool, error) {
 	return c >= p.superMajority, nil
 }
 
-func (p *Poset) round(x string) (int, error) {
+func (p *Poset) round(x string) (int64, error) {
 	if c, ok := p.roundCache.Get(x); ok {
-		return c.(int), nil
+		return c.(int64), nil
 	}
 	r, err := p.round2(x)
 	if err != nil {
@@ -209,7 +212,7 @@ func (p *Poset) round(x string) (int, error) {
 	return r, nil
 }
 
-func (p *Poset) round2(x string) (int, error) {
+func (p *Poset) round2(x string) (int64, error) {
 
 	/*
 		x is the Root
@@ -217,7 +220,7 @@ func (p *Poset) round2(x string) (int, error) {
 	*/
 	rootsBySelfParent, _ := p.Store.RootsBySelfParent()
 	if r, ok := rootsBySelfParent[x]; ok {
-		return int(r.SelfParent.Round), nil
+		return r.SelfParent.Round, nil
 	}
 
 	ex, err := p.Store.GetEvent(x)
@@ -238,7 +241,7 @@ func (p *Poset) round2(x string) (int, error) {
 		if other, ok := root.Others[ex.Hex()]; (ex.OtherParent() == "") ||
 			(ok && other.Hash == ex.OtherParent()) {
 
-			return int(root.NextRound), nil
+			return root.NextRound, nil
 		}
 	}
 
@@ -251,10 +254,10 @@ func (p *Poset) round2(x string) (int, error) {
 		return math.MinInt32, err
 	}
 	if ex.OtherParent() != "" {
-		var opRound int
+		var opRound int64
 		//XXX
 		if other, ok := root.Others[ex.Hex()]; ok && other.Hash == ex.OtherParent() {
-			opRound = int(root.NextRound)
+			opRound = root.NextRound
 		} else {
 			opRound, err = p.round(ex.OtherParent())
 			if err != nil {
@@ -302,22 +305,21 @@ func (p *Poset) witness(x string) (bool, error) {
 	return xRound > spRound, nil
 }
 
-func (p *Poset) roundReceived(x string) (int, error) {
+func (p *Poset) roundReceived(x string) (int64, error) {
 
 	ex, err := p.Store.GetEvent(x)
 	if err != nil {
 		return -1, err
 	}
 
-	res := -1
-	res = int(ex.RoundReceived)
+	res := ex.RoundReceived
 
 	return res, nil
 }
 
-func (p *Poset) lamportTimestamp(x string) (int, error) {
+func (p *Poset) lamportTimestamp(x string) (int64, error) {
 	if c, ok := p.timestampCache.Get(x); ok {
-		return c.(int), nil
+		return c.(int64), nil
 	}
 	r, err := p.lamportTimestamp2(x)
 	if err != nil {
@@ -327,14 +329,14 @@ func (p *Poset) lamportTimestamp(x string) (int, error) {
 	return r, nil
 }
 
-func (p *Poset) lamportTimestamp2(x string) (int, error) {
+func (p *Poset) lamportTimestamp2(x string) (int64, error) {
 	/*
 		x is the Root
 		User Root.SelfParent.LamportTimestamp
 	*/
 	rootsBySelfParent, _ := p.Store.RootsBySelfParent()
 	if r, ok := rootsBySelfParent[x]; ok {
-		return int(r.SelfParent.LamportTimestamp), nil
+		return r.SelfParent.LamportTimestamp, nil
 	}
 
 	ex, err := p.Store.GetEvent(x)
@@ -348,10 +350,10 @@ func (p *Poset) lamportTimestamp2(x string) (int, error) {
 		return math.MinInt32, err
 	}
 
-	plt := math.MinInt32
+	plt := int64(math.MinInt32)
 	//If it is the creator's first Event, use the corresponding Root
 	if ex.SelfParent() == root.SelfParent.Hash {
-		plt = int(root.SelfParent.LamportTimestamp)
+		plt = root.SelfParent.LamportTimestamp
 	} else {
 		t, err := p.lamportTimestamp(ex.SelfParent())
 		if err != nil {
@@ -361,7 +363,7 @@ func (p *Poset) lamportTimestamp2(x string) (int, error) {
 	}
 
 	if ex.OtherParent() != "" {
-		opLT := math.MinInt32
+		opLT := int64(math.MinInt32)
 		if _, err := p.Store.GetEvent(ex.OtherParent()); err == nil {
 			//if we know the other-parent, fetch its Round directly
 			t, err := p.lamportTimestamp(ex.OtherParent())
@@ -372,7 +374,7 @@ func (p *Poset) lamportTimestamp2(x string) (int, error) {
 		} else if other, ok := root.Others[x]; ok && other.Hash == ex.OtherParent() {
 			//we do not know the other-parent but it is referenced  in Root.Others
 			//we use the Root's LamportTimestamp
-			opLT = int(other.LamportTimestamp)
+			opLT = other.LamportTimestamp
 		}
 
 		if opLT > plt {
@@ -384,7 +386,7 @@ func (p *Poset) lamportTimestamp2(x string) (int, error) {
 }
 
 //round(x) - round(y)
-func (p *Poset) roundDiff(x, y string) (int, error) {
+func (p *Poset) roundDiff(x, y string) (int64, error) {
 
 	xRound, err := p.round(x)
 	if err != nil {
@@ -705,7 +707,7 @@ func (p *Poset) setWireInfo(event *Event) error {
 	return nil
 }
 
-func (p *Poset) updatePendingRounds(decidedRounds map[int]int) {
+func (p *Poset) updatePendingRounds(decidedRounds map[int64]int64) {
 	for _, ur := range p.PendingRounds {
 		if _, ok := decidedRounds[ur.Index]; ok {
 			ur.Decided = true
@@ -747,7 +749,7 @@ func (p *Poset) InsertEvent(event Event, setWireInfo bool) error {
 		return fmt.Errorf("CheckOtherParent: %s", err)
 	}
 
-	event.TopologicalIndex = int64(p.topologicalIndex)
+	event.TopologicalIndex = p.topologicalIndex
 	p.topologicalIndex++
 
 	if setWireInfo {
@@ -827,9 +829,7 @@ func (p *Poset) DivideRounds() error {
 				other Events to be added on top, but the base layer must not be
 				reprocessed.
 			*/
-			if !roundInfo.Queued &&
-				(p.LastConsensusRound == nil ||
-					roundNumber >= *p.LastConsensusRound) {
+			if !roundInfo.Queued && roundNumber >= p.LastConsensusRound {
 
 				p.PendingRounds = append(p.PendingRounds, &pendingRound{roundNumber, false})
 				roundInfo.Queued = true
@@ -881,7 +881,7 @@ func (p *Poset) DecideFame() error {
 		votes[x][y] = vote
 	}
 
-	decidedRounds := map[int]int{} // [round number] => index in p.PendingRounds
+	decidedRounds := map[int64]int64{} // [round number] => index in p.PendingRounds
 
 	for pos, r := range p.PendingRounds {
 		roundIndex := r.Index
@@ -958,7 +958,7 @@ func (p *Poset) DecideFame() error {
 		}
 
 		if roundInfo.WitnessesDecided() {
-			decidedRounds[roundIndex] = pos
+			decidedRounds[roundIndex] = int64(pos)
 		}
 
 	}
@@ -991,8 +991,8 @@ func (p *Poset) DecideRoundReceived() error {
 			tr, err := p.Store.GetRound(i)
 			if err != nil {
 				//Can happen after a Reset/FastSync
-				if p.LastConsensusRound != nil &&
-					r < *p.LastConsensusRound {
+				if p.LastConsensusRound != -1 &&
+					r < p.LastConsensusRound {
 					received = true
 					break
 				}
@@ -1081,7 +1081,7 @@ func (p *Poset) ProcessDecidedRounds() error {
 		//Indeed, after a Reset, LastConsensusRound is added to PendingRounds,
 		//but its ConsensusEvents (which are necessarily 'under' this Round) are
 		//already deemed committed. Hence, skip this Round after a Reset.
-		if p.LastConsensusRound != nil && r.Index == *p.LastConsensusRound {
+		if r.Index == p.LastConsensusRound {
 			continue
 		}
 
@@ -1135,7 +1135,7 @@ func (p *Poset) ProcessDecidedRounds() error {
 
 		processedIndex++
 
-		if p.LastConsensusRound == nil || r.Index > *p.LastConsensusRound {
+		if r.Index > p.LastConsensusRound {
 			p.setLastConsensusRound(r.Index)
 		}
 
@@ -1145,7 +1145,7 @@ func (p *Poset) ProcessDecidedRounds() error {
 }
 
 //GetFrame computes the Frame corresponding to a RoundReceived.
-func (p *Poset) GetFrame(roundReceived int) (Frame, error) {
+func (p *Poset) GetFrame(roundReceived int64) (Frame, error) {
 
 	//Try to get it from the Store first
 	frame, err := p.Store.GetFrame(roundReceived)
@@ -1276,8 +1276,7 @@ func (p *Poset) ProcessSigPool() error {
 			continue
 		}
 		//only check if bs is greater than AnchorBlock, otherwise simply remove
-		if p.AnchorBlock == nil ||
-			bs.Index > int64(*p.AnchorBlock) {
+		if bs.Index > p.AnchorBlock {
 			block, err := p.Store.GetBlock(bs.Index)
 			if err != nil {
 				p.logger.WithFields(logrus.Fields{
@@ -1313,9 +1312,8 @@ func (p *Poset) ProcessSigPool() error {
 			}
 
 			if len(block.Signatures) > p.trustCount &&
-				(p.AnchorBlock == nil ||
-					block.Index() > int64(*p.AnchorBlock)) {
-				p.setAnchorBlock(int(block.Index()))
+				block.Index() > p.AnchorBlock {
+				p.setAnchorBlock(block.Index())
 				p.logger.WithFields(logrus.Fields{
 					"block_index": block.Index(),
 					"signatures":  len(block.Signatures),
@@ -1334,16 +1332,16 @@ func (p *Poset) ProcessSigPool() error {
 //This can be used as a base to Reset a Poset
 func (p *Poset) GetAnchorBlockWithFrame() (Block, Frame, error) {
 
-	if p.AnchorBlock == nil {
+	if p.AnchorBlock == -1 {
 		return Block{}, Frame{}, fmt.Errorf("No Anchor Block")
 	}
 
-	block, err := p.Store.GetBlock(int64(*p.AnchorBlock))
+	block, err := p.Store.GetBlock(p.AnchorBlock)
 	if err != nil {
 		return Block{}, Frame{}, err
 	}
 
-	frame, err := p.GetFrame(int(block.RoundReceived()))
+	frame, err := p.GetFrame(block.RoundReceived())
 	if err != nil {
 		return Block{}, Frame{}, err
 	}
@@ -1355,9 +1353,9 @@ func (p *Poset) GetAnchorBlockWithFrame() (Block, Frame, error) {
 func (p *Poset) Reset(block Block, frame Frame) error {
 
 	//Clear all state
-	p.LastConsensusRound = nil
-	p.FirstConsensusRound = nil
-	p.AnchorBlock = nil
+	p.LastConsensusRound = -1
+	p.FirstConsensusRound = -1
+	p.AnchorBlock = -1
 
 	p.UndeterminedEvents = []string{}
 	p.PendingRounds = []*pendingRound{}
@@ -1387,7 +1385,7 @@ func (p *Poset) Reset(block Block, frame Frame) error {
 		return err
 	}
 
-	p.setLastConsensusRound(int(block.RoundReceived()))
+	p.setLastConsensusRound(block.RoundReceived())
 
 	//Insert Frame Events
 	for _, ev := range frame.Events {
@@ -1550,23 +1548,16 @@ func (p *Poset) CheckBlock(block Block) error {
 Setters
 *******************************************************************************/
 
-func (p *Poset) setLastConsensusRound(i int) {
-	if p.LastConsensusRound == nil {
-		p.LastConsensusRound = new(int)
-	}
-	*p.LastConsensusRound = i
+func (p *Poset) setLastConsensusRound(i int64) {
+	p.LastConsensusRound = i
 
-	if p.FirstConsensusRound == nil {
-		p.FirstConsensusRound = new(int)
-		*p.FirstConsensusRound = i
+	if p.FirstConsensusRound == -1 {
+		p.FirstConsensusRound = i
 	}
 }
 
-func (p *Poset) setAnchorBlock(i int) {
-	if p.AnchorBlock == nil {
-		p.AnchorBlock = new(int)
-	}
-	*p.AnchorBlock = i
+func (p *Poset) setAnchorBlock(i int64) {
+	p.AnchorBlock = i
 }
 
 /*******************************************************************************

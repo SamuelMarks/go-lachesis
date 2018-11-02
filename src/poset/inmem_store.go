@@ -19,7 +19,7 @@ type InmemStore struct {
 	participantEventsCache *ParticipantEventsCache
 	rootsByParticipant     map[string]Root //[participant] => Root
 	rootsBySelfParent      map[string]Root //[Root.SelfParent.Hash] => Root
-	lastRound              int
+	lastRound              int64
 	lastConsensusEvents    map[string]string //[participant] => hex() of last consensus event
 	lastBlock              int64
 }
@@ -182,15 +182,15 @@ func (s *InmemStore) AddConsensusEvent(event Event) error {
 	return nil
 }
 
-func (s *InmemStore) GetRound(r int) (RoundInfo, error) {
+func (s *InmemStore) GetRound(r int64) (RoundInfo, error) {
 	res, ok := s.roundCache.Get(r)
 	if !ok {
-		return *NewRoundInfo(), cm.NewStoreErr("RoundCache", cm.KeyNotFound, strconv.Itoa(r))
+		return *NewRoundInfo(), cm.NewStoreErr("RoundCache", cm.KeyNotFound, strconv.FormatInt(r, 10))
 	}
 	return res.(RoundInfo), nil
 }
 
-func (s *InmemStore) SetRound(r int, round RoundInfo) error {
+func (s *InmemStore) SetRound(r int64, round RoundInfo) error {
 	s.roundCache.Add(r, round)
 	if r > s.lastRound {
 		s.lastRound = r
@@ -198,11 +198,11 @@ func (s *InmemStore) SetRound(r int, round RoundInfo) error {
 	return nil
 }
 
-func (s *InmemStore) LastRound() int {
+func (s *InmemStore) LastRound() int64 {
 	return s.lastRound
 }
 
-func (s *InmemStore) RoundWitnesses(r int) []string {
+func (s *InmemStore) RoundWitnesses(r int64) []string {
 	round, err := s.GetRound(r)
 	if err != nil {
 		return []string{}
@@ -210,7 +210,7 @@ func (s *InmemStore) RoundWitnesses(r int) []string {
 	return round.Witnesses()
 }
 
-func (s *InmemStore) RoundEvents(r int) int {
+func (s *InmemStore) RoundEvents(r int64) int {
 	round, err := s.GetRound(r)
 	if err != nil {
 		return 0
@@ -251,17 +251,17 @@ func (s *InmemStore) LastBlockIndex() int64 {
 	return s.lastBlock
 }
 
-func (s *InmemStore) GetFrame(index int) (Frame, error) {
+func (s *InmemStore) GetFrame(index int64) (Frame, error) {
 	res, ok := s.frameCache.Get(index)
 	if !ok {
-		return Frame{}, cm.NewStoreErr("FrameCache", cm.KeyNotFound, strconv.Itoa(index))
+		return Frame{}, cm.NewStoreErr("FrameCache", cm.KeyNotFound, strconv.FormatInt(index, 10))
 	}
 	return res.(Frame), nil
 }
 
 func (s *InmemStore) SetFrame(frame Frame) error {
 	index := frame.Round
-	_, err := s.GetFrame(int(index))
+	_, err := s.GetFrame(index)
 	if err != nil && !cm.Is(err, cm.KeyNotFound) {
 		return err
 	}

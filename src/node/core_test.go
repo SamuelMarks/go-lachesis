@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"reflect"
-	"strconv"
 	"testing"
 
 	"github.com/andrecronje/lachesis/src/common"
@@ -277,7 +276,7 @@ func TestSync(t *testing.T) {
 	if core0Head.OtherParent() != index["e1"] {
 		t.Fatalf("core 0 head other-parent should be e1")
 	}
-	if len(core0Head.flagTable) == 0 {
+	if len(core0Head.GetFlagTable()) == 0 {
 		t.Fatal("flag table is null")
 	}
 	index["e01"] = core0Head.Hex()
@@ -827,12 +826,8 @@ func TestConsensusFF(t *testing.T) {
 	cores, _, _ := initCores(4, t)
 	initFFPoset(cores, t)
 
-	if r := cores[1].GetLastConsensusRoundIndex(); r == nil || *r != 1 {
-		disp := "nil"
-		if r != nil {
-			disp = strconv.Itoa(*r)
-		}
-		t.Fatalf("Cores[1] last consensus Round should be 1, not %s", disp)
+	if r := cores[1].GetLastConsensusRoundIndex(); r == -1 || r != 1 {
+		t.Fatalf("Cores[1] last consensus Round should be 1, not %d", r)
 	}
 
 	if l := len(cores[1].GetConsensusEvents()); l != 6 {
@@ -895,8 +890,7 @@ func TestCoreFastForward(t *testing.T) {
 			t.Fatal(err)
 		}
 		// Assign AnchorBlock
-		cores[1].poset.AnchorBlock = new(int)
-		*cores[1].poset.AnchorBlock = 0
+		cores[1].poset.AnchorBlock = 0
 
 		// Now the function should find an AnchorBlock
 		block, frame, err := cores[1].GetAnchorBlockWithFrame()
@@ -951,15 +945,15 @@ func TestCoreFastForward(t *testing.T) {
 			t.Fatalf("Cores[0].Known should be %v, not %v", expectedKnown, knownBy0)
 		}
 
-		if r := cores[0].GetLastConsensusRoundIndex(); r == nil || *r != 1 {
-			t.Fatalf("Cores[0] last consensus Round should be 1, not %v", r)
+		if r := cores[0].GetLastConsensusRoundIndex(); r != 1 {
+			t.Fatalf("Cores[0] last consensus Round should be 1, not %d", r)
 		}
 
 		if lbi := cores[0].poset.Store.LastBlockIndex(); lbi != 0 {
 			t.Fatalf("Cores[0].poset.LastBlockIndex should be 0, not %d", lbi)
 		}
 
-		sBlock, err := cores[0].poset.Store.GetBlock(int(block.Index()))
+		sBlock, err := cores[0].poset.Store.GetBlock(block.Index())
 		if err != nil {
 			t.Fatalf("Error retrieving latest Block from reset poset: %v", err)
 		}

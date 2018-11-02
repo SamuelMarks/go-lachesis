@@ -20,16 +20,16 @@ type Store interface {
 	ConsensusEvents() []string
 	ConsensusEventsCount() int
 	AddConsensusEvent(Event) error
-	GetRound(int) (RoundInfo, error)
-	SetRound(int, RoundInfo) error
-	LastRound() int
-	RoundWitnesses(int) []string
-	RoundEvents(int) int
+	GetRound(int64) (RoundInfo, error)
+	SetRound(int64, RoundInfo) error
+	LastRound() int64
+	RoundWitnesses(int64) []string
+	RoundEvents(int64) int
 	GetRoot(string) (Root, error)
 	GetBlock(int64) (Block, error)
 	SetBlock(Block) error
 	LastBlockIndex() int64
-	GetFrame(int) (Frame, error)
+	GetFrame(int64) (Frame, error)
 	SetFrame(Frame) error
 	Reset(map[string]Root) error
 	Close() error

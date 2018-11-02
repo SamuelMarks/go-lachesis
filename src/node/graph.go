@@ -83,7 +83,7 @@ func (g *Graph) GetParticipantEvents() map[string]map[string]poset.Event {
 func (g *Graph) GetRounds() []poset.RoundInfo {
 	res := []poset.RoundInfo{}
 
-	round := 0
+	round := int64(0)
 
 	store := g.Node.core.poset.Store
 

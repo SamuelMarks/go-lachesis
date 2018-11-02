@@ -414,7 +414,7 @@ func TestGossip(t *testing.T) {
 	keys, peers := initPeers(4)
 	nodes := initNodes(keys, peers, 1000, 1000, "inmem", logger, t)
 
-	target := 50
+	target := int64(50)
 
 	err := gossip(nodes, target, true, 3*time.Second)
 	if err != nil {
@@ -491,7 +491,7 @@ func TestFastForward(t *testing.T) {
 	defer shutdownNodes(nodes)
 
 	target := 50
-	err := gossip(nodes[1:], target, false, 3*time.Second)
+	err := gossip(nodes[1:], int64(target), false, 3*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -528,7 +528,7 @@ func TestCatchUp(t *testing.T) {
 	normalNodes := initNodes(keys[0:3], peers, 1000, 400, "inmem", logger, t)
 	defer shutdownNodes(normalNodes)
 
-	target := 50
+	target := int64(50)
 
 	err := gossip(normalNodes, target, false, 3*time.Second)
 	if err != nil {
@@ -565,7 +565,7 @@ func TestCatchUp(t *testing.T) {
 	}
 
 	start := node4.core.poset.FirstConsensusRound
-	checkGossip(nodes, *start, t)
+	checkGossip(nodes, start, t)
 }
 //
 //func TestFastSync(t *testing.T) {
@@ -713,7 +713,7 @@ func TestShutdown(t *testing.T) {
 //}
 
 
-func gossip(nodes []*Node, target int, shutdown bool, timeout time.Duration) error {
+func gossip(nodes []*Node, target int64, shutdown bool, timeout time.Duration) error {
 	runNodes(nodes, true)
 	err := bombardAndWait(nodes, target, timeout)
 	if err != nil {
@@ -725,7 +725,7 @@ func gossip(nodes []*Node, target int, shutdown bool, timeout time.Duration) err
 	return nil
 }
 
-func bombardAndWait(nodes []*Node, target int, timeout time.Duration) error {
+func bombardAndWait(nodes []*Node, target int64, timeout time.Duration) error {
 
 	quit := make(chan struct{})
 	makeRandomTransactions(nodes, quit)
@@ -763,7 +763,7 @@ func bombardAndWait(nodes []*Node, target int, timeout time.Duration) error {
 	return nil
 }
 
-func checkGossip(nodes []*Node, fromBlock int, t *testing.T) {
+func checkGossip(nodes []*Node, fromBlock int64, t *testing.T) {
 
 	nodeBlocks := map[int][]poset.Block{}
 	for _, n := range nodes {

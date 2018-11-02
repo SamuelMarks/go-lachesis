@@ -136,7 +136,7 @@ func participantRootKey(participant string) []byte {
 	return []byte(fmt.Sprintf("%s_%s", participant, rootSuffix))
 }
 
-func roundKey(index int) []byte {
+func roundKey(index int64) []byte {
 	return []byte(fmt.Sprintf("%s_%09d", roundPrefix, index))
 }
 
@@ -144,7 +144,7 @@ func blockKey(index int64) []byte {
 	return []byte(fmt.Sprintf("%s_%09d", blockPrefix, index))
 }
 
-func frameKey(index int) []byte {
+func frameKey(index int64) []byte {
 	return []byte(fmt.Sprintf("%s_%09d", framePrefix, index))
 }
 
@@ -243,7 +243,7 @@ func (s *BadgerStore) AddConsensusEvent(event Event) error {
 	return s.inmemStore.AddConsensusEvent(event)
 }
 
-func (s *BadgerStore) GetRound(r int) (RoundInfo, error) {
+func (s *BadgerStore) GetRound(r int64) (RoundInfo, error) {
 	res, err := s.inmemStore.GetRound(r)
 	if err != nil {
 		res, err = s.dbGetRound(r)
@@ -251,18 +251,18 @@ func (s *BadgerStore) GetRound(r int) (RoundInfo, error) {
 	return res, mapError(err, "Round", string(roundKey(r)))
 }
 
-func (s *BadgerStore) SetRound(r int, round RoundInfo) error {
+func (s *BadgerStore) SetRound(r int64, round RoundInfo) error {
 	if err := s.inmemStore.SetRound(r, round); err != nil {
 		return err
 	}
 	return s.dbSetRound(r, round)
 }
 
-func (s *BadgerStore) LastRound() int {
+func (s *BadgerStore) LastRound() int64 {
 	return s.inmemStore.LastRound()
 }
 
-func (s *BadgerStore) RoundWitnesses(r int) []string {
+func (s *BadgerStore) RoundWitnesses(r int64) []string {
 	round, err := s.GetRound(r)
 	if err != nil {
 		return []string{}
@@ -270,7 +270,7 @@ func (s *BadgerStore) RoundWitnesses(r int) []string {
 	return round.Witnesses()
 }
 
-func (s *BadgerStore) RoundEvents(r int) int {
+func (s *BadgerStore) RoundEvents(r int64) int {
 	round, err := s.GetRound(r)
 	if err != nil {
 		return 0
@@ -305,7 +305,7 @@ func (s *BadgerStore) LastBlockIndex() int64 {
 	return s.inmemStore.LastBlockIndex()
 }
 
-func (s *BadgerStore) GetFrame(rr int) (Frame, error) {
+func (s *BadgerStore) GetFrame(rr int64) (Frame, error) {
 	res, err := s.inmemStore.GetFrame(rr)
 	if err != nil {
 		res, err = s.dbGetFrame(rr)
@@ -531,7 +531,7 @@ func (s *BadgerStore) dbGetRoot(participant string) (Root, error) {
 	return *root, nil
 }
 
-func (s *BadgerStore) dbGetRound(index int) (RoundInfo, error) {
+func (s *BadgerStore) dbGetRound(index int64) (RoundInfo, error) {
 	var roundBytes []byte
 	key := roundKey(index)
 	err := s.db.View(func(txn *badger.Txn) error {
@@ -555,7 +555,7 @@ func (s *BadgerStore) dbGetRound(index int) (RoundInfo, error) {
 	return *roundInfo, nil
 }
 
-func (s *BadgerStore) dbSetRound(index int, round RoundInfo) error {
+func (s *BadgerStore) dbSetRound(index int64, round RoundInfo) error {
 	tx := s.db.NewTransaction(true)
 	defer tx.Discard()
 
@@ -653,7 +653,7 @@ func (s *BadgerStore) dbSetBlock(block Block) error {
 	return tx.Commit(nil)
 }
 
-func (s *BadgerStore) dbGetFrame(index int) (Frame, error) {
+func (s *BadgerStore) dbGetFrame(index int64) (Frame, error) {
 	var frameBytes []byte
 	key := frameKey(index)
 	err := s.db.View(func(txn *badger.Txn) error {
@@ -681,7 +681,7 @@ func (s *BadgerStore) dbSetFrame(frame Frame) error {
 	tx := s.db.NewTransaction(true)
 	defer tx.Discard()
 
-	key := frameKey(int(frame.Round))
+	key := frameKey(frame.Round)
 	val, err := proto.Marshal(&frame)
 	if err != nil {
 		return err

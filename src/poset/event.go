@@ -244,8 +244,8 @@ func (e *Event) Hex() string {
 	return e.hex
 }
 
-func (e *Event) SetRound(r int) {
-	e.Round = int64(r)
+func (e *Event) SetRound(r int64) {
+	e.Round = r
 }
 
 func (e *Event) SetLamportTimestamp(t int64) {
