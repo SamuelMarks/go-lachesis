@@ -64,7 +64,7 @@ type roundItem struct {
 
 type play struct {
 	to          int
-	index       int
+	index       int64
 	selfParent  string
 	otherParent string
 	name        string
@@ -104,14 +104,14 @@ func initPosetNodes(n int) ([]TestNode, map[string]string, *[]Event, *peers.Peer
 func playEvents(plays []play, nodes []TestNode, index map[string]string, orderedEvents *[]Event) {
 	for _, p := range plays {
 		signatures := make([]*BlockSignature, len(p.sigPayload))
-		for i, signature := range signatures {
-			signatures[i] = signature;
+		for i, signature := range p.sigPayload {
+			signatures[i] = &signature;
 		}
 		e := NewEvent(p.txPayload,
 			signatures,
 			[]string{index[p.selfParent], index[p.otherParent]},
 			nodes[p.to].Pub,
-			int64(p.index), nil)
+			p.index, nil)
 
 		nodes[p.to].signAndAddEvent(e, p.name, index, orderedEvents)
 	}
@@ -440,7 +440,6 @@ func TestInsertEvent(t *testing.T) {
 
 		participants := h.Participants.ToPeerSlice()
 
-		//e0
 		e0, err := h.Store.GetEvent(index["e0"])
 		if err != nil {
 			t.Fatal(err)
@@ -467,6 +466,11 @@ func TestInsertEvent(t *testing.T) {
 
 		if !IndexListEquals(e0.FirstDescendants, expectedFirstDescendants) {
 			t.Fatal("e0 firstDescendants not good")
+		}
+		eh, _ := e0.Hash()
+		fmt.Printf("EVENT %d %#v\n", e0.Body.CreatorID, eh)
+		for _, a := range e0.LastAncestors {
+			fmt.Printf("%#v\n", a.Event)
 		}
 		if !IndexListEquals(e0.LastAncestors, expectedLastAncestors) {
 			t.Fatalf("e0 lastAncestors not good, expected %#v, got %#v", expectedLastAncestors, e0.LastAncestors)
@@ -2532,8 +2536,8 @@ func initSparsePoset(logger *logrus.Logger) (*Poset, map[string]string) {
 
 	for _, p := range plays {
 		signatures := make([]*BlockSignature, len(p.sigPayload))
-		for i, signature := range signatures {
-			signatures[i] = signature;
+		for i, signature := range p.sigPayload {
+			signatures[i] = &signature;
 		}
 		e := NewEvent(p.txPayload,
 			signatures,

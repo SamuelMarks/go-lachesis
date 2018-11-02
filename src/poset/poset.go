@@ -761,6 +761,11 @@ func (p *Poset) InsertEvent(event Event, setWireInfo bool) error {
 	if err := p.initEventCoordinates(&event); err != nil {
 		return fmt.Errorf("InitEventCoordinates: %s", err)
 	}
+	eh, _ := event.Hash()
+	fmt.Printf("EVENT PEPE %d %#v %d\n", event.Body.CreatorID, eh, len(event.LastAncestors))
+	for _, a := range event.LastAncestors {
+		fmt.Printf("ANCESTOR: %#v\n", a.Event)
+	}
 
 	if err := p.Store.SetEvent(event); err != nil {
 		return fmt.Errorf("SetEvent: %s", err)
