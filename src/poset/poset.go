@@ -1268,7 +1268,8 @@ func (p *Poset) GetFrame(roundReceived int64) (Frame, error) {
 	orderedRoots := make([]*Root, p.Participants.Len())
 	for i, peer := range p.Participants.ToPeerSlice() {
 		r := roots[peer.PubKeyHex]
-		orderedRoots[i] = &r
+		orderedRoots[i] = new(Root)
+		*orderedRoots[i] = r
 	}
 
 	eventPointers := make([]*Event, len(events))
@@ -1528,7 +1529,8 @@ func (p *Poset) ReadWireInfo(wevent WireEvent) (*Event, error) {
 
 	signatures := make([]*BlockSignature, len(wevent.BlockSignatures(creatorBytes)))
 	for i, signature := range wevent.BlockSignatures(creatorBytes)[:] {
-		signatures[i] = &signature
+		signatures[i] = new(BlockSignature)
+		*signatures[i] = signature
 	}
 
 	body := EventBody{
