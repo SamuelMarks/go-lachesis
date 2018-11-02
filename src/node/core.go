@@ -401,12 +401,6 @@ func (c *Core) AddSelfEventBlock(otherHead string) error {
 	var batch[][]byte
 	nTxs := min(len(c.transactionPool), c.maxTransactionsInEvent)
 	batch = c.transactionPool[0:nTxs:nTxs]
-	fmt.Println("**NewEvent:",
-		" len(c.transactionPool)=", len(c.transactionPool),
-		" len(c.blockSignaturePool)=", len(c.blockSignaturePool),
-		" nTxs=", nTxs,
-		" len(batch)=", len(batch),
-	)
 	newHead := poset.NewEvent(batch, c.blockSignaturePool,
 		[]string{c.Head, otherHead}, c.PubKey(), c.Seq+1, flagTable)
 
@@ -420,8 +414,11 @@ func (c *Core) AddSelfEventBlock(otherHead string) error {
 	}).Debug("newHead := poset.NewEventBlock")
 
 	c.transactionPool = c.transactionPool[nTxs:] //[][]byte{}
-//	c.blockSignaturePool = c.blockSignaturePool[:nTxs] //[]poset.BlockSignature{}
-	c.blockSignaturePool = []poset.BlockSignature{}
+	// retain c.blockSignaturePool until c.transactionPool is empty
+	// FIXIT: is there any better strategy?
+	if len(c.transactionPool) == 0 {
+		c.blockSignaturePool = []poset.BlockSignature{}
+	}
 
 	return nil
 }
