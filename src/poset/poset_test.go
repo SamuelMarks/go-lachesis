@@ -589,11 +589,11 @@ func TestReadWireInfo(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !reflect.DeepEqual(ev.Body.BlockSignatures, evFromWire.Body.BlockSignatures) {
-			t.Fatalf("Error converting %s.Body.BlockSignatures from light wire", k)
+		if !BlockSignatureListEquals(ev.Body.BlockSignatures, evFromWire.Body.BlockSignatures) {
+			t.Fatalf("Error converting %s.Body.BlockSignatures from light wire.", k)
 		}
 
-		if !reflect.DeepEqual(ev.Body, evFromWire.Body) {
+		if !ev.Body.Equals(evFromWire.Body) {
 			t.Fatalf("Error converting %s.Body from light wire", k)
 		}
 

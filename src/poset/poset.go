@@ -1495,10 +1495,6 @@ func (p *Poset) ReadWireInfo(wevent WireEvent) (*Event, error) {
 		}
 	}
 
-	if len(wevent.FlagTable) == 0 {
-		return nil, fmt.Errorf("flag table is null")
-	}
-
 	signatures := make([]*BlockSignature, len(wevent.BlockSignatures(creatorBytes)))
 	for i, signature := range wevent.BlockSignatures(creatorBytes)[:] {
 		signatures[i] = &signature
