@@ -480,14 +480,44 @@ func (p *Poset) initEventCoordinates(event *Event) error {
 			}
 		}
 	} else if selfParentError != nil {
-		copy(event.LastAncestors[:members], otherParent.LastAncestors)
+		for i, v := range otherParent.LastAncestors {
+			if v != nil {
+				event.LastAncestors[i] = &Index{
+					ParticipantId: v.ParticipantId,
+					Event: &EventCoordinates{
+						Index: v.Event.Index,
+						Hash: v.Event.Hash,
+					},
+				}
+			}
+		}
 	} else if otherParentError != nil {
-		copy(event.LastAncestors[:members], selfParent.LastAncestors)
+		for i, v := range selfParent.LastAncestors {
+			if v != nil {
+				event.LastAncestors[i] = &Index{
+					ParticipantId: v.ParticipantId,
+					Event: &EventCoordinates{
+						Index: v.Event.Index,
+						Hash: v.Event.Hash,
+					},
+				}
+			}
+		}
 	} else {
 		selfParentLastAncestors := selfParent.LastAncestors
 		otherParentLastAncestors := otherParent.LastAncestors
 
-		copy(event.LastAncestors[:members], selfParentLastAncestors)
+		for i, v := range selfParentLastAncestors {
+			if v != nil {
+				event.LastAncestors[i] = &Index{
+					ParticipantId: v.ParticipantId,
+					Event: &EventCoordinates{
+						Index: v.Event.Index,
+						Hash: v.Event.Hash,
+					},
+				}
+			}
+		}
 		if len(otherParentLastAncestors) == 0 {
 			return fmt.Errorf("**otherParentLastAncestors[] is empty")
 		}
@@ -760,11 +790,6 @@ func (p *Poset) InsertEvent(event Event, setWireInfo bool) error {
 
 	if err := p.initEventCoordinates(&event); err != nil {
 		return fmt.Errorf("InitEventCoordinates: %s", err)
-	}
-	eh, _ := event.Hash()
-	fmt.Printf("EVENT PEPE %d %#v %d\n", event.Body.CreatorID, eh, len(event.LastAncestors))
-	for _, a := range event.LastAncestors {
-		fmt.Printf("ANCESTOR: %#v\n", a.Event)
 	}
 
 	if err := p.Store.SetEvent(event); err != nil {

@@ -467,11 +467,6 @@ func TestInsertEvent(t *testing.T) {
 		if !IndexListEquals(e0.FirstDescendants, expectedFirstDescendants) {
 			t.Fatal("e0 firstDescendants not good")
 		}
-		eh, _ := e0.Hash()
-		fmt.Printf("EVENT %d %#v\n", e0.Body.CreatorID, eh)
-		for _, a := range e0.LastAncestors {
-			fmt.Printf("%#v\n", a.Event)
-		}
 		if !IndexListEquals(e0.LastAncestors, expectedLastAncestors) {
 			t.Fatalf("e0 lastAncestors not good, expected %#v, got %#v", expectedLastAncestors, e0.LastAncestors)
 		}
@@ -1308,10 +1303,6 @@ func TestDecideFame(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for k, v := range round1.Events {
-		fmt.Printf("%s %#v\n", k, v)
-	}
-	fmt.Printf("GETTING %s\n", index["f0"])
 	if f := round1.Events[index["f0"]]; !(f.Witness && f.Famous == Trilean_TRUE) {
 		t.Fatalf("f0 should be famous; got %v", f)
 	}
