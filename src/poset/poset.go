@@ -1273,7 +1273,8 @@ func (p *Poset) GetFrame(roundReceived int64) (Frame, error) {
 
 	eventPointers := make([]*Event, len(events))
 	for i, e := range events {
-		eventPointers[i] = &e
+		eventPointers[i] = new(Event)
+		*eventPointers[i] = e
 	}
 	res := Frame{
 		Round:  int64(roundReceived),

@@ -1588,7 +1588,7 @@ func TestGetFrame(t *testing.T) {
 
 		for p, r := range frame.Roots {
 			er := expectedRoots[p]
-			if x := r.SelfParent; !reflect.DeepEqual(x, er.SelfParent) {
+			if x := r.SelfParent; !x.Equals(er.SelfParent) {
 				t.Fatalf("Roots[%d].SelfParent should be %v, not %v", p, er.SelfParent, x)
 			}
 			if others := r.Others; !reflect.DeepEqual(others, er.Others) {
@@ -1613,7 +1613,11 @@ func TestGetFrame(t *testing.T) {
 			expectedEvents = append(expectedEvents, e)
 		}
 		sort.Sort(ByLamportTimestamp(expectedEvents))
-		if !reflect.DeepEqual(expectedEvents, frame.Events) {
+		expectedEventsPointers := make([]*Event, len(expectedEvents))
+		for i, e := range expectedEvents {
+			expectedEventsPointers[i] = &e
+		}
+		if !EventListEquals(expectedEventsPointers, frame.Events) {
 			t.Fatal("Frame.Events is not good")
 		}
 
@@ -1686,7 +1690,7 @@ func TestGetFrame(t *testing.T) {
 
 		for p, r := range frame.Roots {
 			er := expectedRoots[p]
-			if x := r.SelfParent; !reflect.DeepEqual(x, er.SelfParent) {
+			if x := r.SelfParent; !x.Equals(er.SelfParent) {
 				t.Fatalf("Roots[%d].SelfParent should be %v, not %v", p, er.SelfParent, x)
 			}
 
@@ -2347,7 +2351,7 @@ func TestFunkyPosetFrames(t *testing.T) {
 		}
 
 		for k, r := range frame.Roots {
-			if !reflect.DeepEqual(expectedFrameRoots[int(frame.Round)][k], r) {
+			if !expectedFrameRoots[int(frame.Round)][k].Equals(r) {
 				t.Fatalf("frame[%d].Roots[%d] should be %v, not %v", frame.Round, k, expectedFrameRoots[int(frame.Round)][k], r)
 			}
 		}
@@ -2663,7 +2667,7 @@ func TestSparsePosetFrames(t *testing.T) {
 		}
 
 		for k, r := range frame.Roots {
-			if !reflect.DeepEqual(expectedFrameRoots[int(frame.Round)][k], r) {
+			if !expectedFrameRoots[int(frame.Round)][k].Equals(r) {
 				t.Fatalf("frame[%d].Roots[%d] should be %v, not %v", frame.Round, k, expectedFrameRoots[int(frame.Round)][k], r)
 			}
 		}
@@ -2731,7 +2735,7 @@ func TestSparsePosetReset(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ReadWireInfo(%s): %s", eventName, err)
 			}
-			if !reflect.DeepEqual(ev.Body, diff[i].Body) {
+			if !ev.Body.Equals(diff[i].Body) {
 				t.Fatalf("%s from WireInfo should be %#v, not %#v", eventName, diff[i].Body, ev.Body)
 			}
 			err = h2.InsertEvent(*ev, false)
