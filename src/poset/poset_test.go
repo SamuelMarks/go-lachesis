@@ -1761,6 +1761,11 @@ func TestResetFromFrame(t *testing.T) {
 	unmarshalledFrame := new(Frame)
 	proto.Unmarshal(marshalledFrame, unmarshalledFrame)
 
+	for _, ev := range unmarshalledFrame.Events {
+		ev.Round = -1
+		ev.RoundReceived = -1
+		ev.LamportTimestamp = -1
+	}
 	h2 := NewPoset(h.Participants,
 		NewInmemStore(h.Participants, cacheSize),
 		nil,
@@ -1900,6 +1905,9 @@ func TestResetFromFrame(t *testing.T) {
 			unmarshalledEv := new(Event)
 			proto.Unmarshal(marshalledEv, unmarshalledEv)
 
+			unmarshalledEv.Round = -1
+			unmarshalledEv.RoundReceived = -1
+			unmarshalledEv.LamportTimestamp = -1
 			err = h2.InsertEvent(*unmarshalledEv, true)
 			if err != nil {
 				t.Fatalf("ERR Inserting Event %s: %v", getName(index, ev.Hex()), err)
