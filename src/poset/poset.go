@@ -1444,6 +1444,12 @@ func (p *Poset) Bootstrap() error {
 
 		//Insert the Events in the Poset
 		for _, e := range topologicalEvents {
+			roundInfo, err := p.Store.GetRound(e.Round)
+			if err != nil {
+				return err
+			}
+			roundInfo.Queued = false
+			p.Store.SetRound(e.Round, roundInfo)
 			e.Round = -1
 			e.RoundReceived = -1
 			e.LamportTimestamp = -1
