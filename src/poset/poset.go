@@ -1444,6 +1444,9 @@ func (p *Poset) Bootstrap() error {
 
 		//Insert the Events in the Poset
 		for _, e := range topologicalEvents {
+			e.Round = -1
+			e.RoundReceived = -1
+			e.LamportTimestamp = -1
 			if err := p.InsertEvent(e, true); err != nil {
 				return err
 			}
