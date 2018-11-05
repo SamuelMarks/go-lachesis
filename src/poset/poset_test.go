@@ -2399,11 +2399,22 @@ func TestFunkyPosetReset(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		//This operation clears the private fields which need to be recomputed
-		//in the Events (round, roundReceived,etc)
 		marshalledFrame, _ := proto.Marshal(&frame)
 		unmarshalledFrame := new(Frame)
 		proto.Unmarshal(marshalledFrame, unmarshalledFrame)
+
+		events := make([]*Event, len(unmarshalledFrame.Events))
+		for i, ev := range unmarshalledFrame.Events {
+			var ftw FlagTableWrapper
+			err = proto.Unmarshal(ev.flagTable, &ftw)
+			if err != nil {
+				t.Fatal(err)
+			}
+			ne := NewEvent(ev.Body.Transactions, ev.Body.BlockSignatures, ev.Body.Parents, ev.Body.Creator, ev.Body.Index, ftw.Body)
+			ne.Signature = ev.Signature
+			events[i] = &ne
+		}
+		unmarshalledFrame.Events = events
 
 		h2 := NewPoset(h.Participants,
 			NewInmemStore(h.Participants, cacheSize),
