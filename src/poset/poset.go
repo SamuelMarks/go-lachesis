@@ -1517,8 +1517,8 @@ func (p *Poset) ReadWireInfo(wevent WireEvent) (*Event, error) {
 				//loop through others
 				found := false
 				for _, re := range root.Others {
-					if re.CreatorID == int64(wevent.Body.OtherParentCreatorID) &&
-						re.Index == int64(wevent.Body.OtherParentIndex) {
+					if re.CreatorID == wevent.Body.OtherParentCreatorID &&
+						re.Index == wevent.Body.OtherParentIndex {
 						otherParent = re.Hash
 						found = true
 						break
@@ -1548,11 +1548,11 @@ func (p *Poset) ReadWireInfo(wevent WireEvent) (*Event, error) {
 		Parents:         []string{selfParent, otherParent},
 		Creator:         creatorBytes,
 
-		Index:                int64(wevent.Body.Index),
-		SelfParentIndex:      int64(wevent.Body.SelfParentIndex),
-		OtherParentCreatorID: int64(wevent.Body.OtherParentCreatorID),
-		OtherParentIndex:     int64(wevent.Body.OtherParentIndex),
-		CreatorID:            int64(wevent.Body.CreatorID),
+		Index:                wevent.Body.Index,
+		SelfParentIndex:      wevent.Body.SelfParentIndex,
+		OtherParentCreatorID: wevent.Body.OtherParentCreatorID,
+		OtherParentIndex:     wevent.Body.OtherParentIndex,
+		CreatorID:            wevent.Body.CreatorID,
 	}
 
 	event := &Event{

@@ -2536,7 +2536,7 @@ ATTENTION: Look at roots in Rounds 1 and 2
 	0	 1	  2	   3
 */
 
-func initSparsePoset(logger *logrus.Logger) (*Poset, map[string]string) {
+func initSparsePoset(logger *logrus.Logger) (*Poset, map[string]string, []TestNode) {
 	nodes, index, orderedEvents, participants := initPosetNodes(4)
 
 	for i, peer := range participants.ToPeerSlice() {
@@ -2587,11 +2587,11 @@ func initSparsePoset(logger *logrus.Logger) (*Poset, map[string]string) {
 
 	poset := createPoset(false, orderedEvents, participants, logger.WithField("test", 6))
 
-	return poset, index
+	return poset, index, nodes
 }
 
 func TestSparsePosetFrames(t *testing.T) {
-	h, index := initSparsePoset(common.NewTestLogger(t))
+	h, index, _ := initSparsePoset(common.NewTestLogger(t))
 
 	participants := h.Participants.ToPeerSlice()
 
@@ -2716,7 +2716,7 @@ func TestSparsePosetFrames(t *testing.T) {
 }
 
 func TestSparsePosetReset(t *testing.T) {
-	h, index := initSparsePoset(common.NewTestLogger(t))
+	h, index, nodes := initSparsePoset(common.NewTestLogger(t))
 
 	h.DivideRounds()
 	h.DecideFame()
@@ -2778,6 +2778,12 @@ func TestSparsePosetReset(t *testing.T) {
 			}
 			if !ev.Body.Equals(diff[i].Body) {
 				t.Fatalf("%s from WireInfo should be %#v, not %#v", eventName, diff[i].Body, ev.Body)
+			}
+			for _, n := range nodes {
+				if reflect.DeepEqual(n.Pub, ev.Body.Creator) {
+					ev.Sign(n.Key)
+					break
+				}
 			}
 			err = h2.InsertEvent(*ev, false)
 			if err != nil {
