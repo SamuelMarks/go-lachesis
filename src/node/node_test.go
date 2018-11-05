@@ -292,8 +292,8 @@ func TestAddTransaction(t *testing.T) {
 
 func initNodes(keys []*ecdsa.PrivateKey,
 	peers *peers_.Peers,
-	cacheSize,
-	syncLimit int,
+	cacheSize int,
+	syncLimit int64,
 	storeType string,
 	logger *logrus.Logger,
 	t testing.TB) []*Node {
@@ -765,7 +765,7 @@ func bombardAndWait(nodes []*Node, target int64, timeout time.Duration) error {
 
 func checkGossip(nodes []*Node, fromBlock int64, t *testing.T) {
 
-	nodeBlocks := map[int][]poset.Block{}
+	nodeBlocks := map[int64][]poset.Block{}
 	for _, n := range nodes {
 		var blocks []poset.Block
 		for i := fromBlock; i < n.core.poset.Store.LastBlockIndex(); i++ {
@@ -779,14 +779,14 @@ func checkGossip(nodes []*Node, fromBlock int64, t *testing.T) {
 	}
 
 	minB := len(nodeBlocks[0])
-	for k := 1; k < len(nodes); k++ {
+	for k := int64(1); k < int64(len(nodes)); k++ {
 		if len(nodeBlocks[k]) < minB {
 			minB = len(nodeBlocks[k])
 		}
 	}
 
 	for i, block := range nodeBlocks[0][:minB] {
-		for k := 1; k < len(nodes); k++ {
+		for k := int64(1); k < int64(len(nodes)); k++ {
 			oBlock := nodeBlocks[k][i]
 			if !reflect.DeepEqual(block.Body, oBlock.Body) {
 				t.Fatalf("checkGossip: Difference in Block %d. ###### nodes[0]: %v ###### nodes[%d]: %v", block.Index(), block.Body, k, oBlock.Body)

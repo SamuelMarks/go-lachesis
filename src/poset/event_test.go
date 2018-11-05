@@ -120,7 +120,7 @@ func TestWireEvent(t *testing.T) {
 			OtherParentCreatorID: 66,
 			OtherParentIndex:     2,
 			CreatorID:            67,
-			Index:                int(event.Body.Index),
+			Index:                event.Body.Index,
 			BlockSignatures:      event.WireBlockSignatures(),
 		},
 		Signature: event.Signature,

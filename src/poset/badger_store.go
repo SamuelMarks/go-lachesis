@@ -128,7 +128,7 @@ func participantKey(participant string) []byte {
 	return []byte(fmt.Sprintf("%s_%s", participantPrefix, participant))
 }
 
-func participantEventKey(participant string, index int) []byte {
+func participantEventKey(participant string, index int64) []byte {
 	return []byte(fmt.Sprintf("%s__event_%09d", participant, index))
 }
 
@@ -182,7 +182,7 @@ func (s *BadgerStore) SetEvent(event Event) error {
 	return s.dbSetEvents([]Event{event})
 }
 
-func (s *BadgerStore) ParticipantEvents(participant string, skip int) ([]string, error) {
+func (s *BadgerStore) ParticipantEvents(participant string, skip int64) ([]string, error) {
 	res, err := s.inmemStore.ParticipantEvents(participant, skip)
 	if err != nil {
 		res, err = s.dbParticipantEvents(participant, skip)
@@ -190,7 +190,7 @@ func (s *BadgerStore) ParticipantEvents(participant string, skip int) ([]string,
 	return res, err
 }
 
-func (s *BadgerStore) ParticipantEvent(participant string, index int) (string, error) {
+func (s *BadgerStore) ParticipantEvent(participant string, index int64) (string, error) {
 	result, err := s.inmemStore.ParticipantEvent(participant, index)
 	if err != nil {
 		result, err = s.dbParticipantEvent(participant, index)
@@ -206,22 +206,22 @@ func (s *BadgerStore) LastConsensusEventFrom(participant string) (last string, i
 	return s.inmemStore.LastConsensusEventFrom(participant)
 }
 
-func (s *BadgerStore) KnownEvents() map[int]int {
-	known := make(map[int]int)
+func (s *BadgerStore) KnownEvents() map[int64]int64 {
+	known := make(map[int64]int64)
 	for p, pid := range s.participants.ByPubKey {
-		index := -1
+		index := int64(-1)
 		last, isRoot, err := s.LastEventFrom(p)
 		if err == nil {
 			if isRoot {
 				root, err := s.GetRoot(p)
 				if err != nil {
 					last = root.SelfParent.Hash
-					index = int(root.SelfParent.Index)
+					index = root.SelfParent.Index
 				}
 			} else {
 				lastEvent, err := s.GetEvent(last)
 				if err == nil {
-					index = int(lastEvent.Index())
+					index = lastEvent.Index()
 				}
 			}
 
@@ -235,7 +235,7 @@ func (s *BadgerStore) ConsensusEvents() []string {
 	return s.inmemStore.ConsensusEvents()
 }
 
-func (s *BadgerStore) ConsensusEventsCount() int {
+func (s *BadgerStore) ConsensusEventsCount() int64 {
 	return s.inmemStore.ConsensusEventsCount()
 }
 
@@ -393,7 +393,7 @@ func (s *BadgerStore) dbSetEvents(events []Event) error {
 				return err
 			}
 			//insert [participant_index] => [event hash]
-			peKey := participantEventKey(event.Creator(), int(event.Index()))
+			peKey := participantEventKey(event.Creator(), event.Index())
 			if err := tx.Set(peKey, []byte(eventHex)); err != nil {
 				return err
 			}
@@ -445,7 +445,7 @@ func (s *BadgerStore) dbTopologicalEvents() ([]Event, error) {
 	return res, err
 }
 
-func (s *BadgerStore) dbParticipantEvents(participant string, skip int) ([]string, error) {
+func (s *BadgerStore) dbParticipantEvents(participant string, skip int64) ([]string, error) {
 	var res []string
 	err := s.db.View(func(txn *badger.Txn) error {
 		i := skip + 1
@@ -472,7 +472,7 @@ func (s *BadgerStore) dbParticipantEvents(participant string, skip int) ([]strin
 	return res, err
 }
 
-func (s *BadgerStore) dbParticipantEvent(participant string, index int) (string, error) {
+func (s *BadgerStore) dbParticipantEvent(participant string, index int64) (string, error) {
 	var data []byte
 	key := participantEventKey(participant, index)
 	err := s.db.View(func(txn *badger.Txn) error {
@@ -602,7 +602,7 @@ func (s *BadgerStore) dbSetParticipants(participants *peers.Peers) error {
 
 	for participant, id := range participants.ByPubKey {
 		key := participantKey(participant)
-		val := []byte(strconv.Itoa(id.ID))
+		val := []byte(strconv.FormatInt(id.ID, 10))
 		//insert [participant_participant] => [id]
 		if err := tx.Set(key, val); err != nil {
 			return err

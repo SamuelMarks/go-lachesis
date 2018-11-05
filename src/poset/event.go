@@ -259,11 +259,11 @@ func (e *Event) SetRoundReceived(rr int64) {
 func (e *Event) SetWireInfo(SelfParentIndex,
 	OtherParentCreatorID,
 	OtherParentIndex,
-	CreatorID int) {
-	e.Body.SelfParentIndex = int64(SelfParentIndex)
-	e.Body.OtherParentCreatorID = int64(OtherParentCreatorID)
-	e.Body.OtherParentIndex = int64(OtherParentIndex)
-	e.Body.CreatorID = int64(CreatorID)
+	CreatorID int64) {
+	e.Body.SelfParentIndex = SelfParentIndex
+	e.Body.OtherParentCreatorID = OtherParentCreatorID
+	e.Body.OtherParentIndex = OtherParentIndex
+	e.Body.CreatorID = CreatorID
 }
 
 func (e *Event) WireBlockSignatures() []WireBlockSignature {
@@ -283,11 +283,11 @@ func (e *Event) ToWire() WireEvent {
 	return WireEvent{
 		Body: WireBody{
 			Transactions:         e.Body.Transactions,
-			SelfParentIndex:      int(e.Body.SelfParentIndex),
-			OtherParentCreatorID: int(e.Body.OtherParentCreatorID),
-			OtherParentIndex:     int(e.Body.OtherParentIndex),
-			CreatorID:            int(e.Body.CreatorID),
-			Index:                int(e.Body.Index),
+			SelfParentIndex:      e.Body.SelfParentIndex,
+			OtherParentCreatorID: e.Body.OtherParentCreatorID,
+			OtherParentIndex:     e.Body.OtherParentIndex,
+			CreatorID:            e.Body.CreatorID,
+			Index:                e.Body.Index,
 			BlockSignatures:      e.WireBlockSignatures(),
 		},
 		Signature: e.Signature,
@@ -318,7 +318,7 @@ func (e *Event) MargeFlagTable(
 	return wrapper.Body, err
 }
 
-func rootSelfParent(participantID int) string {
+func rootSelfParent(participantID int64) string {
 	return fmt.Sprintf("Root%d", participantID)
 }
 
@@ -365,12 +365,12 @@ type WireBody struct {
 	Transactions    [][]byte
 	BlockSignatures []WireBlockSignature
 
-	SelfParentIndex      int
-	OtherParentCreatorID int
-	OtherParentIndex     int
-	CreatorID            int
+	SelfParentIndex      int64
+	OtherParentCreatorID int64
+	OtherParentIndex     int64
+	CreatorID            int64
 
-	Index int
+	Index int64
 }
 
 type WireEvent struct {

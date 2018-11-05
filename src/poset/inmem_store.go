@@ -15,7 +15,7 @@ type InmemStore struct {
 	blockCache             *cm.LRU
 	frameCache             *cm.LRU
 	consensusCache         *cm.RollingIndex
-	totConsensusEvents     int
+	totConsensusEvents     int64
 	participantEventsCache *ParticipantEventsCache
 	rootsByParticipant     map[string]Root //[participant] => Root
 	rootsBySelfParent      map[string]Root //[Root.SelfParent.Hash] => Root
@@ -82,7 +82,7 @@ func (s *InmemStore) SetEvent(event Event) error {
 		return err
 	}
 	if cm.Is(err, cm.KeyNotFound) {
-		if err := s.addParticpantEvent(event.Creator(), key, int(event.Index())); err != nil {
+		if err := s.addParticpantEvent(event.Creator(), key, event.Index()); err != nil {
 			return err
 		}
 	}
@@ -92,15 +92,15 @@ func (s *InmemStore) SetEvent(event Event) error {
 	return nil
 }
 
-func (s *InmemStore) addParticpantEvent(participant string, hash string, index int) error {
+func (s *InmemStore) addParticpantEvent(participant string, hash string, index int64) error {
 	return s.participantEventsCache.Set(participant, hash, index)
 }
 
-func (s *InmemStore) ParticipantEvents(participant string, skip int) ([]string, error) {
+func (s *InmemStore) ParticipantEvents(participant string, skip int64) ([]string, error) {
 	return s.participantEventsCache.Get(participant, skip)
 }
 
-func (s *InmemStore) ParticipantEvent(participant string, index int) (string, error) {
+func (s *InmemStore) ParticipantEvent(participant string, index int64) (string, error) {
 	ev, err := s.participantEventsCache.GetItem(participant, index)
 	if err != nil {
 		root, ok := s.rootsByParticipant[participant]
@@ -149,13 +149,13 @@ func (s *InmemStore) LastConsensusEventFrom(participant string) (last string, is
 	return
 }
 
-func (s *InmemStore) KnownEvents() map[int]int {
+func (s *InmemStore) KnownEvents() map[int64]int64 {
 	known := s.participantEventsCache.Known()
 	for p, pid := range s.participants.ByPubKey {
 		if known[pid.ID] == -1 {
 			root, ok := s.rootsByParticipant[p]
 			if ok {
-				known[pid.ID] = int(root.SelfParent.Index)
+				known[pid.ID] = root.SelfParent.Index
 			}
 		}
 	}
@@ -171,7 +171,7 @@ func (s *InmemStore) ConsensusEvents() []string {
 	return res
 }
 
-func (s *InmemStore) ConsensusEventsCount() int {
+func (s *InmemStore) ConsensusEventsCount() int64 {
 	return s.totConsensusEvents
 }
 

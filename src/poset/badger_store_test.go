@@ -234,7 +234,7 @@ func TestDBEventMethods(t *testing.T) {
 	}
 
 	//check that participant events where correctly added
-	skipIndex := -1 //do not skip any indexes
+	skipIndex := int64(-1) //do not skip any indexes
 	for _, p := range participants {
 		pEvents, err := store.dbParticipantEvents(p.hex, skipIndex)
 		if err != nil {
@@ -480,7 +480,7 @@ func TestBadgerEvents(t *testing.T) {
 	}
 
 	//check retrieving events per participant
-	skipIndex := -1 //do not skip any indexes
+	skipIndex := int64(-1) //do not skip any indexes
 	for _, p := range participants {
 		pEvents, err := store.ParticipantEvents(p.hex, skipIndex)
 		if err != nil {
@@ -513,9 +513,9 @@ func TestBadgerEvents(t *testing.T) {
 		}
 	}
 
-	expectedKnown := make(map[int]int)
+	expectedKnown := make(map[int64]int64)
 	for _, p := range participants {
-		expectedKnown[p.id] = testSize - 1
+		expectedKnown[p.id] = int64(testSize - 1)
 	}
 	known := store.KnownEvents()
 	if !reflect.DeepEqual(expectedKnown, known) {

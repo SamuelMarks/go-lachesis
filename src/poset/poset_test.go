@@ -24,7 +24,7 @@ var (
 )
 
 type TestNode struct {
-	ID     int
+	ID     int64
 	Pub    []byte
 	PubHex string
 	Key    *ecdsa.PrivateKey
@@ -1555,7 +1555,7 @@ func TestKnown(t *testing.T) {
 
 	participants := h.Participants.ToPeerSlice()
 
-	expectedKnown := map[int]int{
+	expectedKnown := map[int64]int64{
 		participants[0].ID: 10,
 		participants[1].ID: 9,
 		participants[2].ID: 9,
@@ -1563,8 +1563,8 @@ func TestKnown(t *testing.T) {
 
 	known := h.Store.KnownEvents()
 	for i := range h.Participants.ToIDSlice() {
-		if l := known[i]; l != expectedKnown[i] {
-			t.Fatalf("Known[%d] should be %d, not %d", i, expectedKnown[i], l)
+		if l := known[int64(i)]; l != expectedKnown[int64(i)] {
+			t.Fatalf("Known[%d] should be %d, not %d", i, expectedKnown[int64(i)], l)
 		}
 	}
 }
@@ -1798,7 +1798,7 @@ func TestResetFromFrame(t *testing.T) {
 	*/
 
 	//Test Known
-	expectedKnown := map[int]int{
+	expectedKnown := map[int64]int64{
 		participants[0].ID: 5,
 		participants[1].ID: 4,
 		participants[2].ID: 4,
@@ -2064,6 +2064,9 @@ func TestBootstrap(t *testing.T) {
 
 func initFunkyPoset(logger *logrus.Logger, full bool) (*Poset, map[string]string) {
 	nodes, index, orderedEvents, participants := initPosetNodes(4)
+	for _, n := range nodes {
+		fmt.Printf("PUB %#v KEY %#v\n", n.Pub, n.Key)
+	}
 
 	for i, peer := range participants.ToPeerSlice() {
 		name := fmt.Sprintf("w0%d", i)
@@ -2432,6 +2435,9 @@ func TestFunkyPosetReset(t *testing.T) {
 		//Compute diff
 		h2Known := h2.Store.KnownEvents()
 		diff := getDiff(h, h2Known, t)
+		for _, e := range diff {
+			fmt.Println("EVENT ", e.Signature)
+		}
 
 		wireDiff := make([]WireEvent, len(diff), len(diff))
 		for i, e := range diff {
@@ -2439,11 +2445,13 @@ func TestFunkyPosetReset(t *testing.T) {
 		}
 
 		//Insert remaining Events into the Reset poset
+		fmt.Println("WIRE DIFF SIZE", len(wireDiff))
 		for i, wev := range wireDiff {
 			ev, err := h2.ReadWireInfo(wev)
 			if err != nil {
 				t.Fatalf("Reading WireInfo for %s: %s", getName(index, diff[i].Hex()), err)
 			}
+			fmt.Printf("INSERT EVENT %#v %#v\n", ev.Signature, crypto.ToECDSAPub(ev.Body.Creator))
 			err = h2.InsertEvent(*ev, false)
 			if err != nil {
 				t.Fatal(err)
@@ -2824,7 +2832,7 @@ func compareRoundWitnesses(h, h2 *Poset, index map[string]string, round int64, c
 
 }
 
-func getDiff(h *Poset, known map[int]int, t *testing.T) []Event {
+func getDiff(h *Poset, known map[int64]int64, t *testing.T) []Event {
 	var diff []Event
 	for id, ct := range known {
 		pk := h.Participants.ById[id].PubKeyHex

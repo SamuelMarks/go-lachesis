@@ -16,7 +16,7 @@ import (
 )
 
 type Core struct {
-	id     int
+	id     int64
 	key    *ecdsa.PrivateKey
 	pubKey []byte
 	hexID  string
@@ -37,7 +37,7 @@ type Core struct {
 }
 
 func NewCore(
-	id int,
+	id int64,
 	key *ecdsa.PrivateKey,
 	participants *peers.Peers,
 	store poset.Store,
@@ -75,7 +75,7 @@ func NewCore(
 	return core
 }
 
-func (c *Core) ID() int {
+func (c *Core) ID() int64 {
 	return c.id
 }
 
@@ -213,7 +213,7 @@ func (c *Core) InsertEvent(event poset.Event, setWireInfo bool) error {
 	return nil
 }
 
-func (c *Core) KnownEvents() map[int]int {
+func (c *Core) KnownEvents() map[int64]int64 {
 	return c.poset.Store.KnownEvents()
 }
 
@@ -232,8 +232,8 @@ func (c *Core) SignBlock(block poset.Block) (poset.BlockSignature, error) {
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-func (c *Core) OverSyncLimit(knownEvents map[int]int, syncLimit int) bool {
-	totUnknown := 0
+func (c *Core) OverSyncLimit(knownEvents map[int64]int64, syncLimit int64) bool {
+	totUnknown := int64(0)
 	myKnownEvents := c.KnownEvents()
 	for i, li := range myKnownEvents {
 		if li > knownEvents[i] {
@@ -251,7 +251,7 @@ func (c *Core) GetAnchorBlockWithFrame() (poset.Block, poset.Frame, error) {
 }
 
 // returns events that c knows about and are not in 'known'
-func (c *Core) EventDiff(known map[int]int) (events []poset.Event, err error) {
+func (c *Core) EventDiff(known map[int64]int64) (events []poset.Event, err error) {
 	var unknown []poset.Event
 	// known represents the index of the last event known for every participant
 	// compare this to our view of events and fill unknown with events that we know of
@@ -527,7 +527,7 @@ func (c *Core) GetConsensusEvents() []string {
 	return c.poset.Store.ConsensusEvents()
 }
 
-func (c *Core) GetConsensusEventsCount() int {
+func (c *Core) GetConsensusEventsCount() int64 {
 	return c.poset.Store.ConsensusEventsCount()
 }
 

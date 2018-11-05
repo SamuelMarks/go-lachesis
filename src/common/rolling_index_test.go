@@ -11,14 +11,14 @@ func TestRollingIndex(t *testing.T) {
 	testSize := 3 * size
 	RollingIndex := NewRollingIndex("test", size)
 	items := []string{}
-	for i := 0; i < testSize; i++ {
+	for i := int64(0); i < int64(testSize); i++ {
 		item := fmt.Sprintf("item%d", i)
 		RollingIndex.Set(item, i)
 		items = append(items, item)
 	}
 	cached, lastIndex := RollingIndex.GetLastWindow()
 
-	expectedLastIndex := testSize - 1
+	expectedLastIndex := int64(testSize - 1)
 	if lastIndex != expectedLastIndex {
 		t.Fatalf("lastIndex should be %d, not %d", expectedLastIndex, lastIndex)
 	}
@@ -44,7 +44,7 @@ func TestRollingIndex(t *testing.T) {
 
 	var item interface{}
 
-	indexes := []int{10, 17, 29}
+	indexes := []int64{10, 17, 29}
 	for _, i := range indexes {
 		item, err = RollingIndex.GetItem(i)
 		if err != nil {
@@ -61,7 +61,7 @@ func TestRollingIndex(t *testing.T) {
 	}
 
 	//Test updating an item in place
-	updateIndex := 26
+	updateIndex := int64(26)
 	updateValue := "Updated Item"
 
 	err = RollingIndex.Set(updateValue, updateIndex)
@@ -89,7 +89,7 @@ func TestRollingIndexSkip(t *testing.T) {
 	}
 
 	items := []string{}
-	for i := 0; i < testSize; i++ {
+	for i := int64(0); i < int64(testSize); i++ {
 		item := fmt.Sprintf("item%d", i)
 		RollingIndex.Set(item, i)
 		items = append(items, item)
@@ -99,7 +99,7 @@ func TestRollingIndexSkip(t *testing.T) {
 		t.Fatalf("Skipping index 0 should return ErrTooLate")
 	}
 
-	skipIndex1 := 9
+	skipIndex1 := int64(9)
 	expected1 := items[skipIndex1+1:]
 	cached1, err := RollingIndex.Get(skipIndex1)
 	if err != nil {
@@ -113,7 +113,7 @@ func TestRollingIndexSkip(t *testing.T) {
 		t.Fatalf("expected and cached not equal")
 	}
 
-	skipIndex2 := 15
+	skipIndex2 := int64(15)
 	expected2 := items[skipIndex2+1:]
 	cached2, err := RollingIndex.Get(skipIndex2)
 	if err != nil {
@@ -127,7 +127,7 @@ func TestRollingIndexSkip(t *testing.T) {
 		t.Fatalf("expected and cached not equal")
 	}
 
-	skipIndex3 := 27
+	skipIndex3 := int64(27)
 	expected3 := []string{}
 	cached3, err := RollingIndex.Get(skipIndex3)
 	if err != nil {

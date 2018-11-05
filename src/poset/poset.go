@@ -113,7 +113,7 @@ func (p *Poset) ancestor2(x, y string) (bool, error) {
 	entry, ok := GetByID(ex.LastAncestors, int64(eyCreator))
 
 	if !ok {
-		return false, errors.New("Unknown event id " + strconv.Itoa(eyCreator))
+		return false, errors.New("Unknown event id " + strconv.FormatInt(eyCreator, 10))
 	}
 
 	lastAncestorKnownFromYCreator := entry.Event.Index
@@ -691,9 +691,9 @@ func (p *Poset) createRoot(ev Event) (Root, error) {
 }
 
 func (p *Poset) setWireInfo(event *Event) error {
-	selfParentIndex := -1
-	otherParentCreatorID := -1
-	otherParentIndex := -1
+	selfParentIndex := int64(-1)
+	otherParentCreatorID := int64(-1)
+	otherParentIndex := int64(-1)
 
 	//could be the first Event inserted for this creator. In this case, use Root
 	if lf, isRoot, _ := p.Store.LastEventFrom(event.Creator()); isRoot && lf == event.SelfParent() {
@@ -701,13 +701,13 @@ func (p *Poset) setWireInfo(event *Event) error {
 		if err != nil {
 			return err
 		}
-		selfParentIndex = int(root.SelfParent.Index)
+		selfParentIndex = root.SelfParent.Index
 	} else {
 		selfParent, err := p.Store.GetEvent(event.SelfParent())
 		if err != nil {
 			return err
 		}
-		selfParentIndex = int(selfParent.Index())
+		selfParentIndex = selfParent.Index()
 	}
 
 	if event.OtherParent() != "" {
@@ -717,15 +717,15 @@ func (p *Poset) setWireInfo(event *Event) error {
 			return err
 		}
 		if other, ok := root.Others[event.Hex()]; ok && other.Hash == event.OtherParent() {
-			otherParentCreatorID = int(other.CreatorID)
-			otherParentIndex = int(other.Index)
+			otherParentCreatorID = other.CreatorID
+			otherParentIndex = other.Index
 		} else {
 			otherParent, err := p.Store.GetEvent(event.OtherParent())
 			if err != nil {
 				return err
 			}
 			otherParentCreatorID = p.Participants.ByPubKey[otherParent.Creator()].ID
-			otherParentIndex = int(otherParent.Index())
+			otherParentIndex = otherParent.Index()
 		}
 	}
 

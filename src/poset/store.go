@@ -12,13 +12,13 @@ type Store interface {
 	RootsBySelfParent() (map[string]Root, error)
 	GetEvent(string) (Event, error)
 	SetEvent(Event) error
-	ParticipantEvents(string, int) ([]string, error)
-	ParticipantEvent(string, int) (string, error)
+	ParticipantEvents(string, int64) ([]string, error)
+	ParticipantEvent(string, int64) (string, error)
 	LastEventFrom(string) (string, bool, error)
 	LastConsensusEventFrom(string) (string, bool, error)
-	KnownEvents() map[int]int
+	KnownEvents() map[int64]int64
 	ConsensusEvents() []string
-	ConsensusEventsCount() int
+	ConsensusEventsCount() int64
 	AddConsensusEvent(Event) error
 	GetRound(int64) (RoundInfo, error)
 	SetRound(int64, RoundInfo) error

@@ -11,7 +11,7 @@ const (
 )
 
 type Peer struct {
-	ID        int `json:"-"`
+	ID        int64 `json:"-"`
 	NetAddr   string
 	PubKeyHex string
 }

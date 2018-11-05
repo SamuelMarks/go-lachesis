@@ -22,7 +22,7 @@ type Node struct {
 	conf   *Config
 	logger *logrus.Entry
 
-	id       int
+	id       int64
 	core     *Core
 	coreLock sync.Mutex
 
@@ -51,7 +51,7 @@ type Node struct {
 }
 
 func NewNode(conf *Config,
-	id int,
+	id int64,
 	key *ecdsa.PrivateKey,
 	participants *peers.Peers,
 	store poset.Store,
@@ -372,7 +372,7 @@ func (n *Node) gossip(peerAddr string, parentReturnCh chan struct{}) error {
 	return nil
 }
 
-func (n *Node) pull(peerAddr string) (syncLimit bool, otherKnownEvents map[int]int, err error) {
+func (n *Node) pull(peerAddr string) (syncLimit bool, otherKnownEvents map[int64]int64, err error) {
 	// Compute Known
 	n.coreLock.Lock()
 	knownEvents := n.core.KnownEvents()
@@ -414,7 +414,7 @@ func (n *Node) pull(peerAddr string) (syncLimit bool, otherKnownEvents map[int]i
 	return false, resp.Known, nil
 }
 
-func (n *Node) push(peerAddr string, knownEvents map[int]int) error {
+func (n *Node) push(peerAddr string, knownEvents map[int64]int64) error {
 
 	// Check SyncLimit
 	n.coreLock.Lock()
@@ -510,7 +510,7 @@ func (n *Node) fastForward() error {
 	return nil
 }
 
-func (n *Node) requestSync(target string, known map[int]int) (net.SyncResponse, error) {
+func (n *Node) requestSync(target string, known map[int64]int64) (net.SyncResponse, error) {
 
 	args := net.SyncRequest{
 		FromID: n.id,
@@ -665,8 +665,8 @@ func (n *Node) GetStats() map[string]string {
 		"node_current":            strconv.FormatInt(time.Now().Unix(), 10),
 		"node_start":              strconv.FormatInt(n.start.Unix(), 10),
 		"last_block_index":        strconv.FormatInt(n.core.GetLastBlockIndex(), 10),
-		"consensus_events":        strconv.Itoa(consensusEvents),
-		"sync_limit":              strconv.Itoa(n.conf.SyncLimit),
+		"consensus_events":        strconv.FormatInt(consensusEvents, 10),
+		"sync_limit":              strconv.FormatInt(n.conf.SyncLimit, 10),
 		"consensus_transactions":  strconv.FormatUint(consensusTransactions, 10),
 		"undetermined_events":     strconv.Itoa(len(n.core.GetUndeterminedEvents())),
 		"transaction_pool":        strconv.Itoa(len(n.core.transactionPool)),
@@ -676,7 +676,7 @@ func (n *Node) GetStats() map[string]string {
 		"events_per_second":       strconv.FormatFloat(consensusEventsPerSecond, 'f', 2, 64),
 		"rounds_per_second":       strconv.FormatFloat(consensusRoundsPerSecond, 'f', 2, 64),
 		"round_events":            strconv.Itoa(n.core.GetLastCommittedRoundEventsCount()),
-		"id":                      strconv.Itoa(n.id),
+		"id":                      strconv.FormatInt(n.id, 10),
 		"state":                   n.getState().String(),
 	}
 	// n.mqtt.FireEvent(s, "/mq/lachesis/stats")
@@ -723,11 +723,11 @@ func (n *Node) GetLastEventFrom(participant string) (string, bool, error) {
 	return n.core.poset.Store.LastEventFrom(participant)
 }
 
-func (n *Node) GetKnownEvents() map[int]int {
+func (n *Node) GetKnownEvents() map[int64]int64 {
 	return n.core.poset.Store.KnownEvents()
 }
 
-func (n *Node) GetEvents() (map[int]int, error) {
+func (n *Node) GetEvents() (map[int64]int64, error) {
 	res := n.core.KnownEvents()
  	return res, nil
 }
@@ -764,6 +764,6 @@ func (n *Node) GetBlock(blockIndex int64) (poset.Block, error) {
 	return n.core.poset.Store.GetBlock(blockIndex)
 }
 
-func (n *Node) ID() int {
+func (n *Node) ID() int64 {
 	return n.id
 }

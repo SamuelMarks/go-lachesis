@@ -11,7 +11,7 @@ import (
 
 func TestParticipantEventsCache(t *testing.T) {
 	size := 10
-	testSize := 25
+	testSize := int64(25)
 	participants := peers.NewPeersFromSlice([]*peers.Peer{
 		peers.NewPeer("0xaa", ""),
 		peers.NewPeer("0xbb", ""),
@@ -25,7 +25,7 @@ func TestParticipantEventsCache(t *testing.T) {
 		items[pk] = []string{}
 	}
 
-	for i := 0; i < testSize; i++ {
+	for i := int64(0); i < testSize; i++ {
 		for pk := range participants.ByPubKey {
 			item := fmt.Sprintf("%s%d", pk, i)
 
@@ -40,13 +40,13 @@ func TestParticipantEventsCache(t *testing.T) {
 	// GET ITEM ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	for pk := range participants.ByPubKey {
 
-		index1 := 9
+		index1 := int64(9)
 		_, err := pec.GetItem(pk, index1)
 		if err == nil || !cm.Is(err, cm.TooLate) {
 			t.Fatalf("Expected ErrTooLate")
 		}
 
-		index2 := 15
+		index2 := int64(15)
 		expected2 := items[pk][index2]
 		actual2, err := pec.GetItem(pk, index2)
 		if err != nil {
@@ -56,7 +56,7 @@ func TestParticipantEventsCache(t *testing.T) {
 			t.Fatalf("expected and cached not equal")
 		}
 
-		index3 := 27
+		index3 := int64(27)
 		actual3, err := pec.Get(pk, index3)
 		if err != nil {
 			t.Fatal(err)
@@ -82,7 +82,7 @@ func TestParticipantEventsCache(t *testing.T) {
 			t.Fatalf("Skipping 0 elements should return ErrTooLate")
 		}
 
-		skipIndex := 9
+		skipIndex := int64(9)
 		expected := items[pk][skipIndex+1:]
 		cached, err := pec.Get(pk, skipIndex)
 		if err != nil {
@@ -92,7 +92,7 @@ func TestParticipantEventsCache(t *testing.T) {
 			t.Fatalf("expected and cached not equal")
 		}
 
-		skipIndex2 := 15
+		skipIndex2 := int64(15)
 		expected2 := items[pk][skipIndex2+1:]
 		cached2, err := pec.Get(pk, skipIndex2)
 		if err != nil {
@@ -102,7 +102,7 @@ func TestParticipantEventsCache(t *testing.T) {
 			t.Fatalf("expected and cached not equal")
 		}
 
-		skipIndex3 := 27
+		skipIndex3 := int64(27)
 		cached3, err := pec.Get(pk, skipIndex3)
 		if err != nil {
 			t.Fatal(err)
@@ -114,22 +114,22 @@ func TestParticipantEventsCache(t *testing.T) {
 }
 
 func TestParticipantEventsCacheEdge(t *testing.T) {
-	size := 10
-	testSize := 11
+	size := int64(10)
+	testSize := int64(11)
 	participants := peers.NewPeersFromSlice([]*peers.Peer{
 		peers.NewPeer("0xaa", ""),
 		peers.NewPeer("0xbb", ""),
 		peers.NewPeer("0xcc", ""),
 	})
 
-	pec := NewParticipantEventsCache(size, participants)
+	pec := NewParticipantEventsCache(int(size), participants)
 
 	items := make(map[string][]string)
 	for pk := range participants.ByPubKey {
 		items[pk] = []string{}
 	}
 
-	for i := 0; i < testSize; i++ {
+	for i := int64(0); i < testSize; i++ {
 		for pk := range participants.ByPubKey {
 			item := fmt.Sprintf("%s%d", pk, i)
 

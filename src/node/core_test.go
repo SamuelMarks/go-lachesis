@@ -12,12 +12,12 @@ import (
 	"github.com/andrecronje/lachesis/src/poset"
 )
 
-func initCores(n int, t *testing.T) ([]Core, map[int]*ecdsa.PrivateKey, map[string]string) {
+func initCores(n int, t *testing.T) ([]Core, map[int64]*ecdsa.PrivateKey, map[string]string) {
 	cacheSize := 1000
 
 	var cores []Core
 	index := make(map[string]string)
-	participantKeys := map[int]*ecdsa.PrivateKey{}
+	participantKeys := map[int64]*ecdsa.PrivateKey{}
 
 	// participantKeys := []*ecdsa.PrivateKey{}
 	participants := peers.NewPeers()
@@ -30,7 +30,7 @@ func initCores(n int, t *testing.T) ([]Core, map[int]*ecdsa.PrivateKey, map[stri
 	}
 
 	for i, peer := range participants.ToPeerSlice() {
-		core := NewCore(i,
+		core := NewCore(int64(i),
 			participantKeys[peer.ID],
 			participants,
 			poset.NewInmemStore(participants, cacheSize),
@@ -69,9 +69,9 @@ e01 |   |
 e0  e1  e2
 0   1   2
 */
-func initPoset(t *testing.T, cores []Core, keys map[int]*ecdsa.PrivateKey,
-	index map[string]string, participant int) {
-	for i := 0; i < len(cores); i++ {
+func initPoset(t *testing.T, cores []Core, keys map[int64]*ecdsa.PrivateKey,
+	index map[string]string, participant int64) {
+	for i := int64(0); i < int64(len(cores)); i++ {
 		if i != participant {
 			event, err := cores[i].GetEvent(index[fmt.Sprintf("e%d", i)])
 			if err != nil {
@@ -133,8 +133,8 @@ func initPoset(t *testing.T, cores []Core, keys map[int]*ecdsa.PrivateKey,
 	}
 }
 
-func insertEvent(cores []Core, keys map[int]*ecdsa.PrivateKey, index map[string]string,
-	event poset.Event, name string, participant int, creator int) error {
+func insertEvent(cores []Core, keys map[int64]*ecdsa.PrivateKey, index map[string]string,
+	event poset.Event, name string, participant int64, creator int64) error {
 
 	if participant == creator {
 		if err := cores[participant].SignAndInsertSelfEvent(event); err != nil {
@@ -725,20 +725,20 @@ func TestOverSyncLimit(t *testing.T) {
 	cores := initConsensusPoset(t)
 
 	// positive
-	known := map[int]int{
+	known := map[int64]int64{
 		common.Hash32(cores[0].pubKey): 1,
 		common.Hash32(cores[1].pubKey): 1,
 		common.Hash32(cores[2].pubKey): 1,
 	}
 
-	syncLimit := 10
+	syncLimit := int64(10)
 
 	if !cores[0].OverSyncLimit(known, syncLimit) {
 		t.Fatalf("OverSyncLimit(%v, %v) should return true", known, syncLimit)
 	}
 
 	// negative
-	known = map[int]int{
+	known = map[int64]int64{
 		common.Hash32(cores[0].pubKey): 6,
 		common.Hash32(cores[1].pubKey): 6,
 		common.Hash32(cores[2].pubKey): 6,
@@ -749,7 +749,7 @@ func TestOverSyncLimit(t *testing.T) {
 	}
 
 	// edge
-	known = map[int]int{
+	known = map[int64]int64{
 		common.Hash32(cores[0].pubKey): 2,
 		common.Hash32(cores[1].pubKey): 3,
 		common.Hash32(cores[2].pubKey): 3,
@@ -934,7 +934,7 @@ func TestCoreFastForward(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		expectedKnown := map[int]int{
+		expectedKnown := map[int64]int64{
 			common.Hash32(cores[0].pubKey): -1,
 			common.Hash32(cores[1].pubKey): 1,
 			common.Hash32(cores[2].pubKey): 1,
