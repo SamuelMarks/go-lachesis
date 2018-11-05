@@ -2062,11 +2062,8 @@ func TestBootstrap(t *testing.T) {
 	0	 1	  2	   3
 */
 
-func initFunkyPoset(logger *logrus.Logger, full bool) (*Poset, map[string]string) {
+func initFunkyPoset(logger *logrus.Logger, full bool) (*Poset, map[string]string, []TestNode) {
 	nodes, index, orderedEvents, participants := initPosetNodes(4)
-	for _, n := range nodes {
-		fmt.Printf("PUB %#v KEY %#v\n", n.Pub, n.Key)
-	}
 
 	for i, peer := range participants.ToPeerSlice() {
 		name := fmt.Sprintf("w0%d", i)
@@ -2113,11 +2110,11 @@ func initFunkyPoset(logger *logrus.Logger, full bool) (*Poset, map[string]string
 
 	poset := createPoset(false, orderedEvents, participants, logger.WithField("test", 6))
 
-	return poset, index
+	return poset, index, nodes
 }
 
 func TestFunkyPosetFame(t *testing.T) {
-	h, index := initFunkyPoset(common.NewTestLogger(t), false)
+	h, index, _ := initFunkyPoset(common.NewTestLogger(t), false)
 
 	if err := h.DivideRounds(); err != nil {
 		t.Fatal(err)
@@ -2191,7 +2188,7 @@ func TestFunkyPosetFame(t *testing.T) {
 }
 
 func TestFunkyPosetBlocks(t *testing.T) {
-	h, index := initFunkyPoset(common.NewTestLogger(t), true)
+	h, index, _ := initFunkyPoset(common.NewTestLogger(t), true)
 
 	if err := h.DivideRounds(); err != nil {
 		t.Fatal(err)
@@ -2261,7 +2258,7 @@ func TestFunkyPosetBlocks(t *testing.T) {
 }
 
 func TestFunkyPosetFrames(t *testing.T) {
-	h, index := initFunkyPoset(common.NewTestLogger(t), true)
+	h, index, _ := initFunkyPoset(common.NewTestLogger(t), true)
 
 	participants := h.Participants.ToPeerSlice()
 
@@ -2380,7 +2377,7 @@ func TestFunkyPosetFrames(t *testing.T) {
 }
 
 func TestFunkyPosetReset(t *testing.T) {
-	h, index := initFunkyPoset(common.NewTestLogger(t), true)
+	h, index, nodes := initFunkyPoset(common.NewTestLogger(t), true)
 
 	h.DivideRounds()
 	h.DecideFame()
@@ -2414,7 +2411,12 @@ func TestFunkyPosetReset(t *testing.T) {
 				t.Fatal(err)
 			}
 			ne := NewEvent(ev.Body.Transactions, ev.Body.BlockSignatures, ev.Body.Parents, ev.Body.Creator, ev.Body.Index, ftw.Body)
-			ne.Signature = ev.Signature
+			for _, n := range nodes {
+				if reflect.DeepEqual(n.Pub, ne.Body.Creator) {
+					ne.Sign(n.Key)
+					break
+				}
+			}
 			events[i] = &ne
 		}
 		unmarshalledFrame.Events = events
@@ -2435,9 +2437,6 @@ func TestFunkyPosetReset(t *testing.T) {
 		//Compute diff
 		h2Known := h2.Store.KnownEvents()
 		diff := getDiff(h, h2Known, t)
-		for _, e := range diff {
-			fmt.Println("EVENT ", e.Signature)
-		}
 
 		wireDiff := make([]WireEvent, len(diff), len(diff))
 		for i, e := range diff {
@@ -2445,13 +2444,17 @@ func TestFunkyPosetReset(t *testing.T) {
 		}
 
 		//Insert remaining Events into the Reset poset
-		fmt.Println("WIRE DIFF SIZE", len(wireDiff))
 		for i, wev := range wireDiff {
 			ev, err := h2.ReadWireInfo(wev)
 			if err != nil {
 				t.Fatalf("Reading WireInfo for %s: %s", getName(index, diff[i].Hex()), err)
 			}
-			fmt.Printf("INSERT EVENT %#v %#v\n", ev.Signature, crypto.ToECDSAPub(ev.Body.Creator))
+			for _, n := range nodes {
+				if reflect.DeepEqual(n.Pub, ev.Body.Creator) {
+					ev.Sign(n.Key)
+					break
+				}
+			}
 			err = h2.InsertEvent(*ev, false)
 			if err != nil {
 				t.Fatal(err)
