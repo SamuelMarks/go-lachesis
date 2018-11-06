@@ -431,7 +431,7 @@ func TestDBFrameMethods(t *testing.T) {
 		}
 
 		if !reflect.DeepEqual(storedFrame, frame) {
-			t.Fatalf("Frame and StoredFrame do not match")
+			t.Fatalf("Frame and StoredFrame do not match.\nGot %#v.\nExpected %#v", storedFrame, frame)
 		}
 	})
 }

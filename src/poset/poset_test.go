@@ -501,7 +501,7 @@ func TestInsertEvent(t *testing.T) {
 			t.Fatalf("Invalid wire info on f1")
 		}
 
-		e0CreatorID := strconv.Itoa(p.Participants.ByPubKey[e0.Creator()].ID)
+		e0CreatorID := strconv.FormatInt(p.Participants.ByPubKey[e0.Creator()].ID, 10)
 
 		type Hierarchy struct {
 			ev, selfAncestor, ancestor string
@@ -809,11 +809,11 @@ func TestDivideRounds(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if r := ev.round; r == nil || *r != et.r {
-			t.Fatalf("%s round should be %d, not %d", e, et.r, *r)
+		if r := ev.round; r == -1 || r != et.r {
+			t.Fatalf("%s round should be %d, not %d", e, et.r, r)
 		}
-		if ts := ev.lamportTimestamp; ts == nil || *ts != et.t {
-			t.Fatalf("%s lamportTimestamp should be %d, not %d", e, et.t, *ts)
+		if ts := ev.lamportTimestamp; ts == -1 || ts != et.t {
+			t.Fatalf("%s lamportTimestamp should be %d, not %d", e, et.t, ts)
 		}
 	}
 
@@ -1250,11 +1250,11 @@ func TestDivideRoundsBis(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if r := ev.round; r == nil || *r != et.r {
-			t.Fatalf("%s round should be %d, not %d", e, et.r, *r)
+		if r := ev.round; r == -1 || r != et.r {
+			t.Fatalf("%s round should be %d, not %d", e, et.r, r)
 		}
-		if ts := ev.lamportTimestamp; ts == nil || *ts != et.t {
-			t.Fatalf("%s lamportTimestamp should be %d, not %d", e, et.t, *ts)
+		if ts := ev.lamportTimestamp; ts == -1 || ts != et.t {
+			t.Fatalf("%s lamportTimestamp should be %d, not %d", e, et.t, ts)
 		}
 	}
 
@@ -1349,17 +1349,19 @@ func TestDecideRoundReceived(t *testing.T) {
 	}
 
 	for name, hash := range index {
-		e, _ := p.Store.GetEvent(hash)
-		if rune(name[0]) == rune('e') {
-			if r := *e.roundReceived; r != 1 {
-				t.Fatalf("%s round received should be 1 not %d", name, r)
+		e, err := p.Store.GetEvent(hash)
+		if err == nil {
+			if rune(name[0]) == rune('e') {
+				if r := e.roundReceived; r != 1 {
+					t.Fatalf("%s round received should be 1 not %d", name, r)
+				}
+			} else if rune(name[0]) == rune('f') {
+				if r := e.roundReceived; r != 2 {
+					t.Fatalf("%s round received should be 2 not %d", name, r)
+				}
+			} else if e.roundReceived != -1 {
+				t.Fatalf("%s round received should be -1 not %d", name, e.roundReceived)
 			}
-		} else if rune(name[0]) == rune('f') {
-			if r := *e.roundReceived; r != 2 {
-				t.Fatalf("%s round received should be 2 not %d", name, r)
-			}
-		} else if e.roundReceived != nil {
-			t.Fatalf("%s round received should be nil not %d", name, *e.roundReceived)
 		}
 	}
 
@@ -1509,7 +1511,7 @@ func TestProcessDecidedRounds(t *testing.T) {
 	}
 
 	//Anchor -------------------------------------------------------------------
-	if v := p.AnchorBlock; v != nil {
+	if v := p.AnchorBlock; v != -1 {
 		t.Fatalf("AnchorBlock should be nil, not %v", v)
 	}
 
@@ -1833,11 +1835,11 @@ func TestResetFromFrame(t *testing.T) {
 		t.Fatalf("LastBlockIndex should be %d, not %d", block.Index(), lbi)
 	}
 
-	if r := p2.LastConsensusRound; r == nil || *r != block.RoundReceived() {
-		t.Fatalf("LastConsensusRound should be %d, not %d", block.RoundReceived(), *r)
+	if r := p2.LastConsensusRound; r == -1 || r != block.RoundReceived() {
+		t.Fatalf("LastConsensusRound should be %d, not %d", block.RoundReceived(), r)
 	}
 
-	if v := p2.AnchorBlock; v != nil {
+	if v := p2.AnchorBlock; v != -1 {
 		t.Fatalf("AnchorBlock should be nil, not %v", v)
 	}
 
@@ -1868,6 +1870,9 @@ func TestResetFromFrame(t *testing.T) {
 			marshalledEv, _ := ev.Marshal()
 			unmarshalledEv := new(Event)
 			unmarshalledEv.Unmarshal(marshalledEv)
+			unmarshalledEv.round = -1
+			unmarshalledEv.roundReceived = -1
+			unmarshalledEv.lamportTimestamp = -1
 
 			err = p2.InsertEvent(*unmarshalledEv, true)
 			if err != nil {
@@ -1941,9 +1946,9 @@ func TestBootstrap(t *testing.T) {
 			hKnown, nhKnown)
 	}
 
-	if *p.LastConsensusRound != *np.LastConsensusRound {
+	if p.LastConsensusRound != np.LastConsensusRound {
 		t.Fatalf("Bootstrapped poset's LastConsensusRound should be %#v, not %#v",
-			*p.LastConsensusRound, *np.LastConsensusRound)
+			p.LastConsensusRound, np.LastConsensusRound)
 	}
 
 	if p.LastCommitedRoundEvents != np.LastCommitedRoundEvents {

@@ -578,7 +578,7 @@ func (c *Core) GetConsensusTransactions() ([][]byte, error) {
 	return txs, nil
 }
 
-func (c *Core) GetLastConsensusRoundIndex() *int64 {
+func (c *Core) GetLastConsensusRoundIndex() int64 {
 	return c.poset.LastConsensusRound
 }
 

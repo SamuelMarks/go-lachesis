@@ -99,7 +99,7 @@ func TestMarshallEvent(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(*newEvent, event) {
-		t.Fatalf("Events are not deeply equal")
+		t.Fatalf("Events are not deeply equal\nGot %#v.\nExpected %#v", newEvent, event)
 	}
 }
 
@@ -183,7 +183,7 @@ func TestEventFlagTable(t *testing.T) {
 		"z": 2,
 	}
 
-	event := NewEvent(nil, nil, []string{"p1", "p2"}, []byte("creator"), 1, exp)
+	event := NewEvent(nil, nil, nil, []string{"p1", "p2"}, []byte("creator"), 1, exp)
 	if event.IsLoaded() {
 		t.Fatalf("IsLoaded() should return false for nil Body.Transactions and Body.BlockSignatures")
 	}

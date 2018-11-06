@@ -104,10 +104,10 @@ type Event struct {
 	topologicalIndex int64
 
 	//used for sorting
-	round            *int64
-	lamportTimestamp *int64
+	round            int64
+	lamportTimestamp int64
 
-	roundReceived *int64
+	roundReceived int64
 
 	creator string
 	hash    []byte
@@ -135,8 +135,11 @@ func NewEvent(transactions [][]byte,
 	ft, _ := json.Marshal(flagTable)
 
 	return Event{
-		Body:      body,
-		FlagTable: ft,
+		Body:			body,
+		FlagTable:		ft,
+		round:			-1,
+		lamportTimestamp:	-1,
+		roundReceived:		-1,
 	}
 }
 
@@ -247,24 +250,15 @@ func (e *Event) Hex() string {
 }
 
 func (e *Event) SetRound(r int64) {
-	if e.round == nil {
-		e.round = new(int64)
-	}
-	*e.round = r
+	e.round = r
 }
 
 func (e *Event) SetLamportTimestamp(t int64) {
-	if e.lamportTimestamp == nil {
-		e.lamportTimestamp = new(int64)
-	}
-	*e.lamportTimestamp = t
+	e.lamportTimestamp = t
 }
 
 func (e *Event) SetRoundReceived(rr int64) {
-	if e.roundReceived == nil {
-		e.roundReceived = new(int64)
-	}
-	*e.roundReceived = rr
+	e.roundReceived = rr
 }
 
 func (e *Event) SetWireInfo(selfParentIndex,
@@ -358,11 +352,11 @@ func (a ByLamportTimestamp) Len() int      { return len(a) }
 func (a ByLamportTimestamp) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByLamportTimestamp) Less(i, j int) bool {
 	it, jt := int64(-1), int64(-1)
-	if a[i].lamportTimestamp != nil {
-		it = *a[i].lamportTimestamp
+	if a[i].lamportTimestamp != -1 {
+		it = a[i].lamportTimestamp
 	}
-	if a[j].lamportTimestamp != nil {
-		jt = *a[j].lamportTimestamp
+	if a[j].lamportTimestamp != -1 {
+		jt = a[j].lamportTimestamp
 	}
 	if it != jt {
 		return it < jt

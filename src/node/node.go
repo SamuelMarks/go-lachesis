@@ -666,12 +666,6 @@ func (n *Node) Shutdown() {
 }
 
 func (n *Node) GetStats() map[string]string {
-	toString := func(i *int64) string {
-		if i == nil {
-			return "nil"
-		}
-		return strconv.FormatInt(*i, 10)
-	}
 
 	timeElapsed := time.Since(n.start)
 
@@ -682,12 +676,12 @@ func (n *Node) GetStats() map[string]string {
 
 	lastConsensusRound := n.core.GetLastConsensusRoundIndex()
 	var consensusRoundsPerSecond float64
-	if lastConsensusRound != nil {
-		consensusRoundsPerSecond = float64(*lastConsensusRound) / timeElapsed.Seconds()
+	if lastConsensusRound != -1 {
+		consensusRoundsPerSecond = float64(lastConsensusRound) / timeElapsed.Seconds()
 	}
 
 	s := map[string]string{
-		"last_consensus_round":    toString(lastConsensusRound),
+		"last_consensus_round":    strconv.FormatInt(lastConsensusRound, 10),
 		"time_elapsed":            strconv.FormatFloat(timeElapsed.Seconds(), 'f', 2, 64),
 		"heartbeat":               strconv.FormatFloat(n.conf.HeartbeatTimeout.Seconds(), 'f', 2, 64),
 		"node_current":            strconv.FormatInt(time.Now().Unix(), 10),

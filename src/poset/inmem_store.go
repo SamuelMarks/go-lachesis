@@ -1,7 +1,6 @@
 package poset
 
 import (
-	_ "fmt"
 	"strconv"
 
 	cm "github.com/andrecronje/lachesis/src/common"
@@ -94,18 +93,17 @@ func (s *InmemStore) SetEvent(event Event) error {
 		return err
 	}
 	if cm.Is(err, cm.KeyNotFound) {
-		if err := s.addParticpantEvent(event.Creator(), key, event.Index()); err != nil {
+		if err := s.addParticipantEvent(event.Creator(), key, event.Index()); err != nil {
 			return err
 		}
 	}
 
-	// fmt.Println("Adding event to cache", event.Hex())
 	s.eventCache.Add(key, event)
 
 	return nil
 }
 
-func (s *InmemStore) addParticpantEvent(participant string, hash string, index int64) error {
+func (s *InmemStore) addParticipantEvent(participant string, hash string, index int64) error {
 	return s.participantEventsCache.Set(participant, hash, index)
 }
 

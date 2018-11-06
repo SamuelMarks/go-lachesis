@@ -565,7 +565,7 @@ func TestCatchUp(t *testing.T) {
 	}
 
 	start := node4.core.poset.FirstConsensusRound
-	checkGossip(nodes, *start, t)
+	checkGossip(nodes, start, t)
 }
 //
 //func TestFastSync(t *testing.T) {

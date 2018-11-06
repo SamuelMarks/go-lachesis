@@ -29,7 +29,17 @@ func (f *Frame) Unmarshal(data []byte) error {
 
 	b := bytes.NewBuffer(data)
 	dec := json.NewDecoder(b) //will read from b
-	return dec.Decode(f)
+	err := dec.Decode(f)
+	if err != nil {
+		return err
+	}
+	for i, _ := range f.Events {
+		f.Events[i].round = -1
+		f.Events[i].roundReceived = -1
+		f.Events[i].lamportTimestamp = -1
+	}
+	
+	return nil
 }
 
 func (f *Frame) Hash() ([]byte, error) {
