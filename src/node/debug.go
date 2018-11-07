@@ -104,7 +104,7 @@ func (g *Graph) GetInfosLite() InfosLite {
 	return InfosLite{
 		ParticipantEvents: g.GetParticipantEventsLite(),
 		Rounds:            g.GetRounds(),
-    Blocks:            g.GetBlocks(),
+		Blocks:            g.GetBlocks(),
 	}
 }
 
