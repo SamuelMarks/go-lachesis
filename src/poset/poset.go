@@ -481,7 +481,7 @@ func (p *Poset) lamportTimestamp2(x string) (int64, error) {
 }
 
 // lamport(y) - lamport(x)
-func (p *Poset) lamportTimestampDiff(x, y string) (int, error) {
+func (p *Poset) lamportTimestampDiff(x, y string) (int64, error) {
 	xlt, err := p.lamportTimestamp(x)
  	if err != nil {
 		return 0, err
