@@ -765,7 +765,7 @@ func (p *Poset) InsertEvent(event Event, setWireInfo bool) error {
 		return fmt.Errorf("CheckOtherParent: %s", err)
 	}
 
-	event.Message.topologicalIndex = p.topologicalIndex
+	event.topologicalIndex = p.topologicalIndex
 	p.topologicalIndex++
 
 	if setWireInfo {
@@ -1519,11 +1519,9 @@ func (p *Poset) ReadWireInfo(wevent WireEvent) (*Event, error) {
 	}
 
 	event := &Event{
-		Message: EventMessage {
-			Body:      body,
-			Signature: wevent.Signature,
-			FlagTable: wevent.FlagTable,
-		},
+		Body:      body,
+		Signature: wevent.Signature,
+		FlagTable: wevent.FlagTable,
 	}
 
 	p.logger.WithFields(logrus.Fields{

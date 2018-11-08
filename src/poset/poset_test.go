@@ -501,7 +501,7 @@ func TestInsertEvent(t *testing.T) {
 			t.Fatalf("Invalid wire info on f1")
 		}
 
-		e0CreatorID := strconv.Itoa(p.Participants.ByPubKey[e0.Creator()].ID)
+		e0CreatorID := strconv.FormatInt(p.Participants.ByPubKey[e0.Creator()].ID, 10)
 
 		type Hierarchy struct {
 			ev, selfAncestor, ancestor string
@@ -572,15 +572,15 @@ func TestReadWireInfo(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !reflect.DeepEqual(ev.Message.Body.BlockSignatures, evFromWire.Message.Body.BlockSignatures) {
+		if !reflect.DeepEqual(ev.Body.BlockSignatures, evFromWire.Body.BlockSignatures) {
 			t.Fatalf("Error converting %s.Body.BlockSignatures from light wire", k)
 		}
 
-		if !reflect.DeepEqual(ev.Message.Body, evFromWire.Message.Body) {
+		if !reflect.DeepEqual(ev.Body, evFromWire.Body) {
 			t.Fatalf("Error converting %s.Body from light wire", k)
 		}
 
-		if !reflect.DeepEqual(ev.Message.Signature, evFromWire.Message.Signature) {
+		if !reflect.DeepEqual(ev.Signature, evFromWire.Signature) {
 			t.Fatalf("Error converting %s.Signature from light wire", k)
 		}
 

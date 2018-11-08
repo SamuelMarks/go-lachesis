@@ -104,26 +104,16 @@ type Event struct {
 	topologicalIndex int64
 
 	//used for sorting
-	round            *int
-	lamportTimestamp *int
+	round            *int64
+	lamportTimestamp *int64
 
-	roundReceived *int
+	roundReceived *int64
 
 	creator string
 	hash    []byte
 	hex     string
 
 	FlagTable []byte // FlagTable stores connection information
-}
-
-type Event struct {
-	Message			EventMessage
-
-	//used for sorting
-	round            	*int64
-	lamportTimestamp 	*int64
-
-	roundReceived 		*int64
 }
 
 // NewEvent creates new block event.
@@ -145,43 +135,41 @@ func NewEvent(transactions [][]byte,
 	ft, _ := json.Marshal(flagTable)
 
 	return Event{
-		Message: EventMessage {
-			Body:      body,
-			FlagTable: ft,
-		},
+		Body:      body,
+		FlagTable: ft,
 	}
 }
 
 func (e *Event) Creator() string {
-	if e.Message.creator == "" {
-		e.Message.creator = fmt.Sprintf("0x%X", e.Message.Body.Creator)
+	if e.creator == "" {
+		e.creator = fmt.Sprintf("0x%X", e.Body.Creator)
 	}
-	return e.Message.creator
+	return e.creator
 }
 
 func (e *Event) SelfParent() string {
-	return e.Message.Body.Parents[0]
+	return e.Body.Parents[0]
 }
 
 func (e *Event) OtherParent() string {
-	return e.Message.Body.Parents[1]
+	return e.Body.Parents[1]
 }
 
 func (e *Event) Transactions() [][]byte {
-	return e.Message.Body.Transactions
+	return e.Body.Transactions
 }
 
 func (e *Event) Index() int64 {
-	return e.Message.Body.Index
+	return e.Body.Index
 }
 
 func (e *Event) BlockSignatures() []BlockSignature {
-	return e.Message.Body.BlockSignatures
+	return e.Body.BlockSignatures
 }
 
 //True if Event contains a payload or is the initial Event of its creator
 func (e *Event) IsLoaded() bool {
-	if e.Message.Body.Index == 0 {
+	if e.Body.Index == 0 {
 		return true
 	}
 
@@ -193,7 +181,7 @@ func (e *Event) IsLoaded() bool {
 
 //ecdsa sig
 func (e *Event) Sign(privKey *ecdsa.PrivateKey) error {
-	signBytes, err := e.Message.Body.Hash()
+	signBytes, err := e.Body.Hash()
 	if err != nil {
 		return err
 	}
@@ -201,20 +189,20 @@ func (e *Event) Sign(privKey *ecdsa.PrivateKey) error {
 	if err != nil {
 		return err
 	}
-	e.Message.Signature = crypto.EncodeSignature(R, S)
+	e.Signature = crypto.EncodeSignature(R, S)
 	return err
 }
 
 func (e *Event) Verify() (bool, error) {
-	pubBytes := e.Message.Body.Creator
+	pubBytes := e.Body.Creator
 	pubKey := crypto.ToECDSAPub(pubBytes)
 
-	signBytes, err := e.Message.Body.Hash()
+	signBytes, err := e.Body.Hash()
 	if err != nil {
 		return false, err
 	}
 
-	r, s, err := crypto.DecodeSignature(e.Message.Signature)
+	r, s, err := crypto.DecodeSignature(e.Signature)
 	if err != nil {
 		return false, err
 	}
@@ -226,7 +214,7 @@ func (e *Event) Verify() (bool, error) {
 func (e *Event) Marshal() ([]byte, error) {
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)
-	if err := enc.Encode(e.Message); err != nil {
+	if err := enc.Encode(e); err != nil {
 		return nil, err
 	}
 	return b.Bytes(), nil
@@ -235,27 +223,27 @@ func (e *Event) Marshal() ([]byte, error) {
 func (e *Event) Unmarshal(data []byte) error {
 	b := bytes.NewBuffer(data)
 	dec := json.NewDecoder(b) //will read from b
-	return dec.Decode(&e.Message)
+	return dec.Decode(e)
 }
 
 //sha256 hash of body
 func (e *Event) Hash() ([]byte, error) {
-	if len(e.Message.hash) == 0 {
-		hash, err := e.Message.Body.Hash()
+	if len(e.hash) == 0 {
+		hash, err := e.Body.Hash()
 		if err != nil {
 			return nil, err
 		}
-		e.Message.hash = hash
+		e.hash = hash
 	}
-	return e.Message.hash, nil
+	return e.hash, nil
 }
 
 func (e *Event) Hex() string {
-	if e.Message.hex == "" {
+	if e.hex == "" {
 		hash, _ := e.Hash()
-		e.Message.hex = fmt.Sprintf("0x%X", hash)
+		e.hex = fmt.Sprintf("0x%X", hash)
 	}
-	return e.Message.hex
+	return e.hex
 }
 
 func (e *Event) SetRound(r int64) {
@@ -283,16 +271,16 @@ func (e *Event) SetWireInfo(selfParentIndex,
 	otherParentCreatorID,
 	otherParentIndex,
 	creatorID int64) {
-	e.Message.Body.selfParentIndex = selfParentIndex
-	e.Message.Body.otherParentCreatorID = otherParentCreatorID
-	e.Message.Body.otherParentIndex = otherParentIndex
-	e.Message.Body.creatorID = creatorID
+	e.Body.selfParentIndex = selfParentIndex
+	e.Body.otherParentCreatorID = otherParentCreatorID
+	e.Body.otherParentIndex = otherParentIndex
+	e.Body.creatorID = creatorID
 }
 
 func (e *Event) WireBlockSignatures() []WireBlockSignature {
-	if e.Message.Body.BlockSignatures != nil {
-		wireSignatures := make([]WireBlockSignature, len(e.Message.Body.BlockSignatures))
-		for i, bs := range e.Message.Body.BlockSignatures {
+	if e.Body.BlockSignatures != nil {
+		wireSignatures := make([]WireBlockSignature, len(e.Body.BlockSignatures))
+		for i, bs := range e.Body.BlockSignatures {
 			wireSignatures[i] = bs.ToWire()
 		}
 
@@ -314,15 +302,15 @@ func (e *Event) ToWire() WireEvent {
 			Index:                e.Body.Index,
 			BlockSignatures:      e.WireBlockSignatures(),
 		},
-		Signature: e.Message.Signature,
-		FlagTable: e.Message.FlagTable,
+		Signature: e.Signature,
+		FlagTable: e.FlagTable,
 	}
 }
 
 // GetFlagTable returns the flag table.
 func (e *Event) GetFlagTable() (result map[string]int64, err error) {
 	result = make(map[string]int64)
-	err = json.Unmarshal(e.Message.FlagTable, &result)
+	err = json.Unmarshal(e.FlagTable, &result)
 	return result, err
 }
 
@@ -330,7 +318,7 @@ func (e *Event) GetFlagTable() (result map[string]int64, err error) {
 func (e *Event) MergeFlagTable(
 	dst map[string]int64) (result map[string]int64, err error) {
 	src := make(map[string]int64)
-	if err := json.Unmarshal(e.Message.FlagTable, &src); err != nil {
+	if err := json.Unmarshal(e.FlagTable, &src); err != nil {
 		return nil, err
 	}
 
@@ -358,7 +346,7 @@ type ByTopologicalOrder []Event
 func (a ByTopologicalOrder) Len() int      { return len(a) }
 func (a ByTopologicalOrder) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByTopologicalOrder) Less(i, j int) bool {
-	return a[i].Message.topologicalIndex < a[j].Message.topologicalIndex
+	return a[i].topologicalIndex < a[j].topologicalIndex
 }
 
 // ByLamportTimestamp implements sort.Interface for []Event based on
@@ -380,8 +368,8 @@ func (a ByLamportTimestamp) Less(i, j int) bool {
 		return it < jt
 	}
 
-	wsi, _, _ := crypto.DecodeSignature(a[i].Message.Signature)
-	wsj, _, _ := crypto.DecodeSignature(a[j].Message.Signature)
+	wsi, _, _ := crypto.DecodeSignature(a[i].Signature)
+	wsj, _, _ := crypto.DecodeSignature(a[j].Signature)
 	return wsi.Cmp(wsj) < 0
 }
 
