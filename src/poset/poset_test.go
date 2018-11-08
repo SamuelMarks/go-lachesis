@@ -463,10 +463,10 @@ func TestInsertEvent(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !(e0.Message.Body.selfParentIndex == -1 &&
-			e0.Message.Body.otherParentCreatorID == -1 &&
-			e0.Message.Body.otherParentIndex == -1 &&
-			e0.Message.Body.creatorID == p.Participants.ByPubKey[e0.Creator()].ID) {
+		if !(e0.Body.selfParentIndex == -1 &&
+			e0.Body.otherParentCreatorID == -1 &&
+			e0.Body.otherParentIndex == -1 &&
+			e0.Body.creatorID == p.Participants.ByPubKey[e0.Creator()].ID) {
 			t.Fatalf("Invalid wire info on e0")
 		}
 
@@ -481,10 +481,10 @@ func TestInsertEvent(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !(e21.Message.Body.selfParentIndex == 1 &&
-			e21.Message.Body.otherParentCreatorID == p.Participants.ByPubKey[e10.Creator()].ID &&
-			e21.Message.Body.otherParentIndex == 1 &&
-			e21.Message.Body.creatorID == p.Participants.ByPubKey[e21.Creator()].ID) {
+		if !(e21.Body.selfParentIndex == 1 &&
+			e21.Body.otherParentCreatorID == p.Participants.ByPubKey[e10.Creator()].ID &&
+			e21.Body.otherParentIndex == 1 &&
+			e21.Body.creatorID == p.Participants.ByPubKey[e21.Creator()].ID) {
 			t.Fatalf("Invalid wire info on e21")
 		}
 
@@ -494,14 +494,14 @@ func TestInsertEvent(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !(f1.Message.Body.selfParentIndex == 2 &&
-			f1.Message.Body.otherParentCreatorID == p.Participants.ByPubKey[e0.Creator()].ID &&
-			f1.Message.Body.otherParentIndex == 2 &&
-			f1.Message.Body.creatorID == p.Participants.ByPubKey[f1.Creator()].ID) {
+		if !(f1.Body.selfParentIndex == 2 &&
+			f1.Body.otherParentCreatorID == p.Participants.ByPubKey[e0.Creator()].ID &&
+			f1.Body.otherParentIndex == 2 &&
+			f1.Body.creatorID == p.Participants.ByPubKey[f1.Creator()].ID) {
 			t.Fatalf("Invalid wire info on f1")
 		}
 
-		e0CreatorID := strconv.FormatInt(p.Participants.ByPubKey[e0.Creator()].ID, 10)
+		e0CreatorID := strconv.Itoa(p.Participants.ByPubKey[e0.Creator()].ID)
 
 		type Hierarchy struct {
 			ev, selfAncestor, ancestor string

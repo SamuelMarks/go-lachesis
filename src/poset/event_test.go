@@ -119,8 +119,8 @@ func TestWireEvent(t *testing.T) {
 
 	expectedWireEvent := WireEvent{
 		Body: WireBody{
-			Transactions:         event.Message.Body.Transactions,
-			InternalTransactions: event.Message.Body.InternalTransactions,
+			Transactions:         event.Body.Transactions,
+			InternalTransactions: event.Body.InternalTransactions,
 			SelfParentIndex:      1,
 			OtherParentCreatorID: 66,
 			OtherParentIndex:     2,

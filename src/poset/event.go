@@ -97,11 +97,17 @@ func (e *EventBody) Hash() ([]byte, error) {
 Event
 *******************************************************************************/
 
-type EventMessage struct {
+type Event struct {
 	Body      EventBody
 	Signature string //creator's digital signature of body
 
 	topologicalIndex int64
+
+	//used for sorting
+	round            *int
+	lamportTimestamp *int
+
+	roundReceived *int
 
 	creator string
 	hash    []byte
@@ -179,8 +185,8 @@ func (e *Event) IsLoaded() bool {
 		return true
 	}
 
-	hasTransactions := e.Message.Body.Transactions != nil &&
-		(len(e.Message.Body.Transactions) > 0 || len(e.Message.Body.InternalTransactions) > 0)
+	hasTransactions := e.Body.Transactions != nil &&
+		(len(e.Body.Transactions) > 0 || len(e.Body.InternalTransactions) > 0)
 
 	return hasTransactions
 }
@@ -299,13 +305,13 @@ func (e *Event) ToWire() WireEvent {
 
 	return WireEvent{
 		Body: WireBody{
-			Transactions:         e.Message.Body.Transactions,
-			InternalTransactions: e.Message.Body.InternalTransactions,
-			SelfParentIndex:      e.Message.Body.selfParentIndex,
-			OtherParentCreatorID: e.Message.Body.otherParentCreatorID,
-			OtherParentIndex:     e.Message.Body.otherParentIndex,
-			CreatorID:            e.Message.Body.creatorID,
-			Index:                e.Message.Body.Index,
+			Transactions:         e.Body.Transactions,
+			InternalTransactions: e.Body.InternalTransactions,
+			SelfParentIndex:      e.Body.selfParentIndex,
+			OtherParentCreatorID: e.Body.otherParentCreatorID,
+			OtherParentIndex:     e.Body.otherParentIndex,
+			CreatorID:            e.Body.creatorID,
+			Index:                e.Body.Index,
 			BlockSignatures:      e.WireBlockSignatures(),
 		},
 		Signature: e.Message.Signature,
