@@ -1341,14 +1341,16 @@ func (p *Poset) GetFrame(roundReceived int64) (Frame, error) {
 				}
 			}
 		}
-		eventMessages[i] = &ev.Message
+		eventMessages[i] = new(EventMessage)
+		*eventMessages[i] = ev.Message
 	}
 
 	//order roots
 	orderedRoots := make([]*Root, p.Participants.Len())
 	for i, peer := range p.Participants.ToPeerSlice() {
 		root := roots[peer.PubKeyHex]
-		orderedRoots[i] = &root
+		orderedRoots[i] = new(Root)
+		*orderedRoots[i] = root
 	}
 
 	res := Frame{
