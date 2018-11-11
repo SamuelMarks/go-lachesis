@@ -1609,7 +1609,8 @@ func (p *Poset) ReadWireInfo(wevent WireEvent) (*Event, error) {
 
 	transactions := make([]*InternalTransaction, len(wevent.Body.InternalTransactions))
 	for i, v := range wevent.Body.InternalTransactions {
-		transactions[i] = &v
+		transactions[i] = new(InternalTransaction)
+		*transactions[i] = v
 	}
 	signatureValues := wevent.BlockSignatures(creatorBytes)
 	blockSignatures := make([]*BlockSignature, len(signatureValues))
