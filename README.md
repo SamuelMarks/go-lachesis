@@ -51,7 +51,7 @@ Once the stack it's setup, you can compile the proto messages by
 running this command:
 
 ```bash
-protoc --proto_path=src/poset/ --go_out=paths=source_relative:./src/poset src/poset/*.proto
+make proto
 ```
 
 Note that because of [this issue](https://github.com/andrecronje/lachesis/issues/82), you will need to modify the file
