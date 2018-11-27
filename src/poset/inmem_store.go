@@ -37,22 +37,22 @@ func NewInmemStore(participants *peers.Peers, cacheSize int) *InmemStore {
 
 	eventCache, err :=  lru.New(cacheSize)
 	if err != nil {
-		fmt.Println("Unable to init InmemStore.eventCache")
+		fmt.Println("Unable to init InmemStore.eventCache:", err)
 		os.Exit(31)
 	}
 	roundCache, err :=  lru.New(cacheSize)
 	if err != nil {
-		fmt.Println("Unable to init InmemStore.roundCache")
+		fmt.Println("Unable to init InmemStore.roundCache:", err)
 		os.Exit(32)
 	}
 	blockCache, err :=  lru.New(cacheSize)
 	if err != nil {
-		fmt.Println("Unable to init InmemStore.blockCache")
+		fmt.Println("Unable to init InmemStore.blockCache:", err)
 		os.Exit(33)
 	}
 	frameCache, err :=  lru.New(cacheSize)
 	if err != nil {
-		fmt.Println("Unable to init InmemStore.frameCache")
+		fmt.Println("Unable to init InmemStore.frameCache:", err)
 		os.Exit(34)
 	}
 
@@ -308,12 +308,12 @@ func (s *InmemStore) SetFrame(frame Frame) error {
 func (s *InmemStore) Reset(roots map[string]Root) error {
 	eventCache, errr :=  lru.New(s.cacheSize)
 	if errr != nil {
-		fmt.Println("Unable to init InmemStore.eventCache")
+		fmt.Println("Unable to reset InmemStore.eventCache:", errr)
 		os.Exit(41)
 	}
 	roundCache, errr :=  lru.New(s.cacheSize)
 	if errr != nil {
-		fmt.Println("Unable to init InmemStore.roundCache")
+		fmt.Println("Unable to reset InmemStore.roundCache:", errr)
 		os.Exit(42)
 	}
 	// FIXIT: Should we recreate blockCache, frameCache and participantEventsCache here as well
