@@ -156,15 +156,18 @@ func (b *Block) ProtoUnmarshal(data []byte) error {
 }
 
 func (b *Block) Sign(privKey *ecdsa.PrivateKey) (bs BlockSignature, err error) {
-	// TODO: Currently StateHash value is different on sender and receiver
-	// so we need to review StateHash placement inside block body.
-	// Setting StateHash to nil before Hash calculation is a temporary fix for
+	// TODO: Currently StateHash and FrameHash values are different on sender and receiver
+	// so we need to review StateHash and FrameHash placement inside block body.
+	// Setting StateHash and FrameHash to nil before Hash calculation is a temporary fix for
 	// block signature verification bug https://github.com/Fantom-foundation/go-lachesis/issues/42
 	saveStateHash := b.Body.StateHash
+	saveFrameHash := b.Body.FrameHash
 	b.Body.StateHash = nil
+	b.Body.FrameHash = nil
 
 	signBytes, err := b.Body.Hash()
 	b.Body.StateHash = saveStateHash
+	b.Body.FrameHash = saveFrameHash
 	if err != nil {
 		return bs, err
 	}
@@ -187,15 +190,18 @@ func (b *Block) SetSignature(bs BlockSignature) error {
 }
 
 func (b *Block) Verify(sig BlockSignature) (bool, error) {
-	// TODO: Currently StateHash value is different on sender and receiver
-	// so we need to review StateHash placement inside block body.
-	// Setting StateHash to nil before Hash calculation is a temporary fix for
+	// TODO: Currently StateHash and FrameHash values are different on sender and receiver
+	// so we need to review StateHash and FrameHash placement inside block body.
+	// Setting StateHash and FrameHash to nil before Hash calculation is a temporary fix for
 	// block signature verification bug https://github.com/Fantom-foundation/go-lachesis/issues/42
 	saveStateHash := b.Body.StateHash
+	saveFrameHash := b.Body.FrameHash
 	b.Body.StateHash = nil
+	b.Body.FrameHash = nil
 
 	signBytes, err := b.Body.Hash()
 	b.Body.StateHash = saveStateHash
+	b.Body.FrameHash = saveFrameHash
 	if err != nil {
 		return false, err
 	}
