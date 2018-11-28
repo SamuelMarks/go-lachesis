@@ -1675,9 +1675,9 @@ func TestProcessDecidedRounds(t *testing.T) {
 
 	frame1, err := p.GetFrame(block0.RoundReceived())
 	frame1Hash, err := frame1.Hash()
-	if !reflect.DeepEqual(block0.FrameHash(), frame1Hash) {
+	if !reflect.DeepEqual(block0.GetFrameHash(), frame1Hash) {
 		t.Fatalf("frame hash from block0 should be %v, not %v",
-			frame1Hash, block0.FrameHash())
+			frame1Hash, block0.GetFrameHash())
 	}
 
 	block1, err := p.Store.GetBlock(1)
@@ -1703,9 +1703,9 @@ func TestProcessDecidedRounds(t *testing.T) {
 
 	frame2, err := p.GetFrame(block1.RoundReceived())
 	frame2Hash, err := frame2.Hash()
-	if !reflect.DeepEqual(block1.FrameHash(), frame2Hash) {
+	if !reflect.DeepEqual(block1.GetFrameHash(), frame2Hash) {
 		t.Fatalf("frame hash from block1 should be %v, not %v",
-			frame2Hash, block1.FrameHash())
+			frame2Hash, block1.GetFrameHash())
 	}
 
 	expRounds := []pendingRound{
@@ -1928,9 +1928,9 @@ func TestGetFrame(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !reflect.DeepEqual(block0.FrameHash(), frameHash) {
+		if !reflect.DeepEqual(block0.GetFrameHash(), frameHash) {
 			t.Fatalf("frame hash (0x%X) from block 0 and frame hash"+
-				" (0x%X) differ", block0.FrameHash(), frameHash)
+				" (0x%X) differ", block0.GetFrameHash(), frameHash)
 		}
 	})
 
