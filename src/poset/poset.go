@@ -868,7 +868,7 @@ func (p *Poset) InsertEvent(event Event, setWireInfo bool) error {
 		return fmt.Errorf("CheckOtherParent: %s", err)
 	}
 
-	event.topologicalIndex = p.topologicalIndex
+	event.Message.TopologicalIndex = p.topologicalIndex
 	p.topologicalIndex++
 
 	if setWireInfo {
@@ -1007,6 +1007,9 @@ func (p *Poset) DivideRounds() error {
 		}
 
 		if updateEvent {
+			if ev.CreatorID() == 0 {
+				p.setWireInfo(&ev)
+			}
 			p.Store.SetEvent(ev)
 		}
 	}
@@ -1314,7 +1317,7 @@ func (p *Poset) GetFrame(roundReceived int64) (Frame, error) {
 		events = append(events, e)
 	}
 
-	sort.Sort(ByLamportTimestamp(events))
+	sort.Stable(ByLamportTimestamp(events))
 
 	// Get/Create Roots
 	roots := make(map[string]Root)
@@ -1689,11 +1692,11 @@ func (p *Poset) ReadWireInfo(wevent WireEvent) (*Event, error) {
 			Signature:    wevent.Signature,
 			FlagTable:    wevent.FlagTable,
 			WitnessProof: wevent.WitnessProof,
+			SelfParentIndex:      wevent.Body.SelfParentIndex,
+			OtherParentCreatorID: wevent.Body.OtherParentCreatorID,
+			OtherParentIndex:     wevent.Body.OtherParentIndex,
+			CreatorID:            wevent.Body.CreatorID,
 		},
-		selfParentIndex:      wevent.Body.SelfParentIndex,
-		otherParentCreatorID: wevent.Body.OtherParentCreatorID,
-		otherParentIndex:     wevent.Body.OtherParentIndex,
-		creatorID:            wevent.Body.CreatorID,
 	}
 
 	p.logger.WithFields(logrus.Fields{
