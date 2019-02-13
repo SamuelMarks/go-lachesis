@@ -550,7 +550,6 @@ func TestFastForward(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	time.Sleep(2 * time.Second)
 
 	err = nodes[0].fastForward()
 	if err != nil {

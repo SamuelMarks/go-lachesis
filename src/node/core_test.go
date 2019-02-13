@@ -31,7 +31,9 @@ func initCores(n int, t *testing.T) ([]*Core,
 		participantKeys[peer.ID] = key
 	}
 
-	for i, peer := range participants.ToPeerSlice() {
+	peers := participants.ToPeerSlice()
+
+	for i, peer := range peers {
 		core := NewCore(uint64(i),
 			participantKeys[peer.ID],
 			participants,
@@ -40,6 +42,7 @@ func initCores(n int, t *testing.T) ([]*Core,
 			common.NewTestLogger(t))
 
 		selfParent := poset.GenRootSelfParent(peer.ID)
+		otherParent := poset.GenRootSelfParent(peers[(i + 1) % len(peers)].ID)
 
 		flagTable := make(poset.FlagTable)
 		flagTable[selfParent] = 1
@@ -48,7 +51,7 @@ func initCores(n int, t *testing.T) ([]*Core,
 		initialEvent := poset.NewEvent([][]byte(nil),
 			[]poset.InternalTransaction{},
 			nil,
-			poset.EventHashes{selfParent, poset.EventHash{}}, core.PubKey(), 0, flagTable)
+			poset.EventHashes{selfParent, otherParent}, core.PubKey(), 0, flagTable)
 		err := core.SignAndInsertSelfEvent(initialEvent)
 		if err != nil {
 			t.Fatal(err)
@@ -726,8 +729,8 @@ func initConsensusPoset(t *testing.T) []*Core {
 func TestConsensus(t *testing.T) {
 	cores := initConsensusPoset(t)
 
-	if l := len(cores[0].GetConsensusEvents()); l != 4 {
-		t.Fatalf("length of consensus should be 4 not %d", l)
+	if l := len(cores[0].GetConsensusEvents()); l != 10 {
+		t.Fatalf("length of consensus should be 10 not %d", l)
 	}
 
 	core0Consensus := cores[0].GetConsensusEvents()

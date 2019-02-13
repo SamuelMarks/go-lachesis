@@ -238,11 +238,14 @@ func initPosetFull(t testing.TB, plays []play, db bool, n int,
 	logger *logrus.Entry) (*Poset, map[string]EventHash, *[]Event, []TestNode) {
 	nodes, index, orderedEvents, participants := initPosetNodes(n)
 
+	peers := participants.ToPeerSlice()
+
 	// Needed to have sorted nodes based on participants hash32
-	for i, peer := range participants.ToPeerSlice() {
+	for i, peer := range peers {
 		selfParent := GenRootSelfParent(peer.ID)
+		otherParent := GenRootSelfParent(peers[(i + 1) % len(peers)].ID)
 		event := NewEvent(nil, nil, nil,
-			EventHashes{selfParent, EventHash{}},
+			EventHashes{selfParent, otherParent},
 			nodes[i].Pub,
 			0,
 			FlagTable{selfParent: 1})
@@ -586,6 +589,8 @@ func TestInsertEvent(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		t.Logf("TestInsertEvent:: ev.SelfParent() %v == selfDominator %v && ev.OtherParent() %v == dominator %v",
+			ev.SelfParent(), selfDominator, ev.OtherParent(), dominator)
 		return ev.SelfParent() == selfDominator && ev.OtherParent() == dominator
 	}
 
@@ -602,9 +607,9 @@ func TestInsertEvent(t *testing.T) {
 		}
 
 		if !(e0Event.Message.SelfParentIndex == -1 &&
-			e0Event.Message.OtherParentCreatorID == peers.PeerNIL &&
 			e0Event.Message.OtherParentIndex == -1 &&
 			e0Event.Message.CreatorID == peer0.ID) {
+			t.Logf("SelfParentIndex: %d == -1; OtherParentCreatorID: %d == peers.PeerNIL %d; OtherParentIndex %d == -1; CreatorID %v == peer0.ID %v", e0Event.Message.SelfParentIndex, e0Event.Message.OtherParentCreatorID, peers.PeerNIL, e0Event.Message.OtherParentIndex, e0Event.Message.CreatorID, peer0.ID)
 			t.Fatalf("Invalid wire info on %s", e0)
 		}
 
@@ -653,6 +658,7 @@ func TestInsertEvent(t *testing.T) {
 		}
 
 		e0CreatorID := fmt.Sprint(peer0.ID)
+		e10CreatorID := fmt.Sprint(peer10.ID)
 
 		type Hierarchy struct {
 			ev            string
@@ -661,7 +667,7 @@ func TestInsertEvent(t *testing.T) {
 		}
 
 		toCheck := []Hierarchy{
-			{e0, fakeEventHash("Root" + e0CreatorID), fakeEventHash("")},
+			{e0, fakeEventHash("Root" + e0CreatorID), fakeEventHash("Root" + e10CreatorID)},
 			{e10, index[e1], index[e0]},
 			{e21, index[s20], index[e10]},
 			{e02, index[s00], index[e21]},
