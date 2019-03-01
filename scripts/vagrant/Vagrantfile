@@ -1,0 +1,20 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/alpine38"
+
+  config.vm.network :private_network, ip: "192.168.158.1"
+  config.vm.provision :shell, path: "../docker/bootstrap.sh"
+
+  # Ensure you reset all settings for docker by setting them to `nil`
+  config.vm.provider "docker" do |d|
+    config.vm.box = nil
+    config.vm.network = nil
+    # d.image = "alpine:latest"
+    d.vagrant_vagrantfile = "vagrant_lachesis"
+    d.vagrant_machine = "dockerhost"
+    d.build_dir "../docker"
+    # d.build_args = ["--tag lachesis"]
+    d.name = "lachesis"
+    d.ports = [1338, 1339, 8000, 12000]
+    d.has_ssh = false
+  end
+end

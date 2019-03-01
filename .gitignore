@@ -36,3 +36,6 @@ lachesis_*
 *.bak
 
 .#*
+
+# Vagrant
+scripts/vagrant/.vagrant
